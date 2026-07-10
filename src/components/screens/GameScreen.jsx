@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { audio } from '../../game/audio.js'
 import { useMapControls } from '../../hooks/useMapControls.js'
 import { useTimer } from '../../hooks/useTimer.js'
 import {
@@ -59,6 +60,8 @@ export function GameScreen({ onTimeUp, game }) {
 
   const movementEnabled = Boolean(game.playing && !game.encounterId)
   const [minimapOpen, setMinimapOpen] = useState(false)
+  const [muted, setMuted] = useState(() => audio.isMuted())
+  useEffect(() => audio.onMuteChange(setMuted), [])
   const mapInputEnabled = movementEnabled && !minimapOpen
 
   useMapControls(mapInputEnabled, game.moveKeysRef, game.touchAnalogRef)
@@ -192,13 +195,25 @@ export function GameScreen({ onTimeUp, game }) {
               SCORE <span className="font-mono text-amber-100">{game.score}</span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setMinimapOpen((o) => !o)}
-            className={`${hudChip} text-[10px] font-bold tracking-[0.14em] text-amber-200/80 active:bg-black/70`}
-          >
-            MAP
-          </button>
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              onClick={() => audio.toggleMuted()}
+              className={`${hudChip} text-[10px] font-bold tracking-[0.14em] ${
+                muted ? 'text-amber-200/35' : 'text-amber-200/80'
+              } active:bg-black/70`}
+              aria-label={muted ? 'Unmute sound' : 'Mute sound'}
+            >
+              {muted ? 'SND OFF' : 'SND ON'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMinimapOpen((o) => !o)}
+              className={`${hudChip} text-[10px] font-bold tracking-[0.14em] text-amber-200/80 active:bg-black/70`}
+            >
+              MAP
+            </button>
+          </div>
         </div>
       </div>
 

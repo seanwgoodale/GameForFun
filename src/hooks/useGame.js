@@ -1,5 +1,8 @@
 import { useMemo, useSyncExternalStore } from 'react'
+import { audio } from '../game/audio.js'
 import { store } from '../game/gameStore.js'
+
+audio.attach(store)
 
 if (import.meta.env.DEV && typeof window !== 'undefined') {
   // Dev-only handle for debugging / driving the sim from the console.
