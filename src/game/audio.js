@@ -149,6 +149,11 @@ class AudioSystem {
         this.tone({ from: 659, duration: 0.1, volume: 0.18, type: 'triangle', when: 0.09 })
         this.tone({ from: 784, duration: 0.16, volume: 0.18, type: 'triangle', when: 0.18 })
         break
+      case 'trade':
+        this.tone({ from: 440, duration: 0.08, volume: 0.2 })
+        this.tone({ from: 554, duration: 0.08, volume: 0.2, when: 0.09 })
+        this.tone({ from: 659, duration: 0.14, volume: 0.2, when: 0.18 })
+        break
       case 'encounter-open':
         this.tone({ from: 110, to: 82, duration: 0.4, volume: 0.3, type: 'sawtooth' })
         break

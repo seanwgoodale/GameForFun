@@ -1,4 +1,4 @@
-import { getScenarioById } from '../data/scenarios.js'
+import { getEncounterById } from '../data/encounters.js'
 import {
   VIEWPORT_COLS,
   VIEWPORT_ROWS,
@@ -40,9 +40,8 @@ export class GameStore {
     this.reset = this.reset.bind(this)
     this.stopGame = this.stopGame.bind(this)
     this.clearPendingEnd = this.clearPendingEnd.bind(this)
-    this.submitEncounterAnswer = this.submitEncounterAnswer.bind(this)
-    this.pickTraderReward = this.pickTraderReward.bind(this)
-    this.tryWeaponOnEncounter = this.tryWeaponOnEncounter.bind(this)
+    this.resolveEncounterChoice = this.resolveEncounterChoice.bind(this)
+    this.dismissEncounterResult = this.dismissEncounterResult.bind(this)
     this.fireRangedWeapon = this.fireRangedWeapon.bind(this)
     this.useHealthPack = this.useHealthPack.bind(this)
   }
@@ -118,18 +117,13 @@ export class GameStore {
     this.commit()
   }
 
-  submitEncounterAnswer(optionIndex) {
-    actions.submitEncounterAnswer(this.world, optionIndex)
+  resolveEncounterChoice(choiceIndex) {
+    actions.resolveEncounterChoice(this.world, choiceIndex)
     this.commit()
   }
 
-  pickTraderReward(choice) {
-    actions.pickTraderReward(this.world, choice)
-    this.commit()
-  }
-
-  tryWeaponOnEncounter() {
-    actions.tryWeaponOnEncounter(this.world)
+  dismissEncounterResult() {
+    actions.dismissEncounterResult(this.world)
     this.commit()
   }
 
@@ -178,8 +172,8 @@ function buildSnapshot(world) {
   const encounterEntity = world.encounterId
     ? (world.entities.find((e) => e.id === world.encounterId) ?? null)
     : null
-  const encounterScenario = encounterEntity?.scenarioId
-    ? getScenarioById(encounterEntity.scenarioId)
+  const encounter = encounterEntity?.scenarioId
+    ? getEncounterById(encounterEntity.scenarioId)
     : null
   return {
     MAP_COLS: world.cols,
@@ -196,12 +190,12 @@ function buildSnapshot(world) {
     health: world.health,
     weapons: world.weapons,
     healthPacks: world.healthPacks,
-    weaponFeedback: world.weaponFeedback,
     score: world.score,
     playing: world.playing,
     encounterId: world.encounterId,
     encounterEntity,
-    encounterScenario,
+    encounter,
+    encounterResult: world.encounterResult,
     encounterStep: world.encounterStep,
     encounterTotal: world.encounterQuota,
     encountersCleared: world.entities.filter((e) => e.scenarioId && e.defeated)

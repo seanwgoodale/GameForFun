@@ -245,14 +245,16 @@ function fireHostileShot(world, e, now) {
 }
 
 /**
- * Walking into a live zombie or willing trader opens the encounter modal.
- * 'no-engage' hostiles, traded traders, and angry traders are pass-through.
+ * Walking into a live zombie or willing trader opens its encounter.
+ * 'no-engage' hostiles, traded/angry traders, and recently-pacified
+ * survivors are pass-through.
  */
 function triggerEncounter(world, now) {
   const { x, y } = world.player
   for (const e of world.entities) {
     if (e.defeated) continue
     if (e.kind !== 'zombie' && e.kind !== 'trader') continue
+    if (e.pacifiedUntil && now < e.pacifiedUntil) continue
     if (e.kind === 'trader') {
       if (e.traded) continue
       if (e.angryUntil && now < e.angryUntil) continue
@@ -260,9 +262,9 @@ function triggerEncounter(world, now) {
     if (world.hostileApproach.get(e.id) === 'no-engage') continue
     const ec = entityCenter(e)
     if (distSq(x, y, ec.x, ec.y) < PLAYER_INTERACT_RADIUS_SQ) {
-      world.weaponFeedback = null
       world.encounterId = e.id
-      world.encounterStep = 'question'
+      world.encounterStep = 'choice'
+      world.encounterResult = null
       pushEvent(world, { type: 'encounter-open', kind: e.kind })
       touch(world)
       break

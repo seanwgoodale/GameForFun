@@ -1,19 +1,15 @@
-import { getScenarioById } from '../data/scenarios.js'
+import { getEncounterById } from '../data/encounters.js'
 import {
+  ENCOUNTER_PACIFIED_MS,
   HEALTH_PICKUP_AMOUNT,
   MAX_HEALTH,
   PROJECTILE_FLIGHT_MS,
   RANGED_SHOT_RANGE,
-  TRADER_AMMO_REWARD,
   TRADER_ANGRY_DURATION_MS,
-  TRADER_HEALTH_PACK_REWARD,
-  WEAPON_KILL_CHANCE,
   WEAPON_KILL_SCORE,
-  WEAPON_MISS_DAMAGE,
-  WRONG_ANSWER_DAMAGE,
 } from '../utils/constants.js'
 import { cellKey } from '../utils/helpers.js'
-import { applyScoreDelta, pointsForAnswer } from './scoring.js'
+import { applyScoreDelta } from './scoring.js'
 import { applyDamage, patchEntity, pushEvent, touch } from './world.js'
 
 /** @param {import('./world.js').World} world */
@@ -22,82 +18,110 @@ function currentEncounter(world) {
   return world.entities.find((e) => e.id === world.encounterId) ?? null
 }
 
-function closeEncounter(world) {
-  world.encounterId = null
-  world.encounterStep = 'question'
-  touch(world)
-}
-
 /**
- * Answer the open encounter. Correct: score, and zombies die (traders move to
- * the reward step). Wrong: vitals damage, encounter stays open.
- * @param {import('./world.js').World} world
- * @param {number} optionIndex
+ * Weighted outcome roll; chances are weights and need not sum to 1.
+ * @param {import('../data/encounters.js').Outcome[]} outcomes
+ * @param {() => number} rng
  */
-export function submitEncounterAnswer(world, optionIndex) {
-  const entity = currentEncounter(world)
-  const scenario = entity?.scenarioId
-    ? getScenarioById(entity.scenarioId)
-    : null
-  if (!entity || !scenario || !world.playing) return
-
-  world.weaponFeedback = null
-  touch(world)
-  if (optionIndex === scenario.correctIndex) {
-    world.score = applyScoreDelta(world.score, pointsForAnswer(true))
-    if (entity.kind === 'trader') {
-      world.encounterStep = 'reward'
-      return
-    }
-    world.zombiesKilled += 1
-    patchEntity(world, entity.id, { defeated: true })
-    closeEncounter(world)
-    return
+export function rollOutcome(outcomes, rng) {
+  const total = outcomes.reduce((sum, o) => sum + o.chance, 0)
+  let r = rng() * total
+  for (const o of outcomes) {
+    r -= o.chance
+    if (r < 0) return o
   }
-  applyDamage(world, WRONG_ANSWER_DAMAGE)
+  return outcomes[outcomes.length - 1]
 }
 
 /**
+ * Whether a choice's up-front cost is payable right now.
  * @param {import('./world.js').World} world
- * @param {'ammo' | 'health'} choice
+ * @param {import('../data/encounters.js').Choice} choice
  */
-export function pickTraderReward(world, choice) {
-  const entity = currentEncounter(world)
-  if (!entity || entity.kind !== 'trader' || !world.playing) return
-  if (choice === 'ammo') world.weapons += TRADER_AMMO_REWARD
-  else if (choice === 'health') world.healthPacks += TRADER_HEALTH_PACK_REWARD
-  patchEntity(world, entity.id, { traded: true })
-  closeEncounter(world)
+export function canAfford(world, choice) {
+  return (
+    world.weapons >= (choice.cost?.ammo ?? 0) &&
+    world.healthPacks >= (choice.cost?.medkits ?? 0)
+  )
 }
 
 /**
- * Spend a sidearm charge inside the encounter modal. Hits kill zombies or anger
- * traders; misses cost vitals and leave the encounter open.
+ * Resolve one encounter choice: pay costs, roll the outcome, apply effects,
+ * and move to the result step. Health loss runs the shared damage pipeline,
+ * so a bad outcome can end the run.
  * @param {import('./world.js').World} world
+ * @param {number} choiceIndex
  * @param {() => number} [rng]
+ * @param {number} [now]
  */
-export function tryWeaponOnEncounter(world, rng = Math.random) {
+export function resolveEncounterChoice(
+  world,
+  choiceIndex,
+  rng = Math.random,
+  now = Date.now(),
+) {
   const entity = currentEncounter(world)
-  if (!entity || !world.playing || world.weapons <= 0) return
+  const encounter = entity?.scenarioId
+    ? getEncounterById(entity.scenarioId)
+    : null
+  if (!entity || !encounter || !world.playing) return
+  if (world.encounterStep !== 'choice') return
+  const choice = encounter.choices[choiceIndex]
+  if (!choice || !canAfford(world, choice)) return
 
-  world.weaponFeedback = null
-  world.weapons -= 1
-  touch(world)
-  const hit = rng() < WEAPON_KILL_CHANCE
-  if (hit && entity.kind === 'zombie') {
-    world.zombiesKilled += 1
-    world.score = applyScoreDelta(world.score, WEAPON_KILL_SCORE)
-    patchEntity(world, entity.id, { defeated: true })
-    closeEncounter(world)
-  } else if (hit && entity.kind === 'trader') {
-    patchEntity(world, entity.id, {
-      angryUntil: Date.now() + TRADER_ANGRY_DURATION_MS,
-    })
-    closeEncounter(world)
-  } else {
-    world.weaponFeedback = 'miss'
-    applyDamage(world, WEAPON_MISS_DAMAGE)
+  world.weapons -= choice.cost?.ammo ?? 0
+  world.healthPacks -= choice.cost?.medkits ?? 0
+
+  const outcome = rollOutcome(choice.outcomes, rng)
+  const fx = outcome.effects ?? {}
+
+  if (fx.ammo) world.weapons = Math.max(0, world.weapons + fx.ammo)
+  if (fx.medkits) world.healthPacks = Math.max(0, world.healthPacks + fx.medkits)
+  if (fx.score) world.score = applyScoreDelta(world.score, fx.score)
+  if (fx.health) {
+    if (fx.health < 0) applyDamage(world, -fx.health)
+    else world.health = Math.min(MAX_HEALTH, world.health + fx.health)
   }
+  if (fx.kill) {
+    if (entity.kind === 'zombie') world.zombiesKilled += 1
+    patchEntity(world, entity.id, { defeated: true })
+    pushEvent(world, { type: 'kill', x: entity.x, y: entity.y })
+  }
+  if (fx.trade) {
+    patchEntity(world, entity.id, { traded: true })
+    pushEvent(world, { type: 'trade' })
+  }
+  if (fx.anger) {
+    patchEntity(world, entity.id, {
+      angryUntil: now + TRADER_ANGRY_DURATION_MS,
+    })
+    pushEvent(world, { type: 'anger', x: entity.x, y: entity.y })
+  }
+
+  world.encounterResult = { text: outcome.text, effects: fx }
+  world.encounterStep = 'result'
+  touch(world)
+}
+
+/**
+ * Leave the result screen. A survivor that wasn't killed or traded gets a
+ * short pacified window so the player can disengage without instantly
+ * re-triggering the same encounter.
+ * @param {import('./world.js').World} world
+ * @param {number} [now]
+ */
+export function dismissEncounterResult(world, now = Date.now()) {
+  if (world.encounterStep !== 'result') return
+  const entity = currentEncounter(world)
+  if (entity && !entity.defeated && !entity.traded) {
+    patchEntity(world, entity.id, {
+      pacifiedUntil: now + ENCOUNTER_PACIFIED_MS,
+    })
+  }
+  world.encounterId = null
+  world.encounterStep = 'choice'
+  world.encounterResult = null
+  touch(world)
 }
 
 /**

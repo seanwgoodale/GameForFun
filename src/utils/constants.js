@@ -1,9 +1,6 @@
 /** Round length in seconds (very large maps) */
 export const ROUND_DURATION_SEC = 600
 
-/** Points for clearing an encounter */
-export const POINTS_PER_CORRECT = 15
-
 /** Bonus for reaching the extraction tile */
 export const GOAL_BONUS = 40
 
@@ -14,13 +11,7 @@ export const MAX_HEALTH = 130
 /** Vitals restored by a medkit pickup */
 export const HEALTH_PICKUP_AMOUNT = 28
 
-/** Chance (0–1) that spending one weapon clears the current encounter */
-export const WEAPON_KILL_CHANCE = 0.38
-
-/** Integer % for UI copy */
-export const WEAPON_KILL_CHANCE_PERCENT = Math.round(WEAPON_KILL_CHANCE * 100)
-
-/** Score when a weapon successfully clears an encounter */
+/** Score when a ranged shot drops a hostile */
 export const WEAPON_KILL_SCORE = 12
 
 /** Damage when stepping into residual radiation (once per hotspot id) */
@@ -37,12 +28,6 @@ export const RADIATION_PULSE_SHRINK_MIN = 3000
 export const RADIATION_PULSE_SHRINK_MAX = 6000
 export const RADIATION_PULSE_REST_MIN = 3000
 export const RADIATION_PULSE_REST_MAX = 8000
-
-/** Damage on a wrong encounter answer */
-export const WRONG_ANSWER_DAMAGE = 10
-
-/** Vitals lost when a sidearm shot misses (20% of starting health) */
-export const WEAPON_MISS_DAMAGE = Math.round(STARTING_HEALTH * 0.2)
 
 /** Multiply zombie & radiation counts after other tuning (×3) */
 export const HOSTILE_ZOMBIE_RAD_MULT = 3
@@ -124,12 +109,12 @@ export const PLAYER_INTERACT_RADIUS_SQ =
 /** Zombies to eliminate before extraction */
 export const ZOMBIES_TO_ELIMINATE = 10
 
-/** Trader reward amounts */
-export const TRADER_AMMO_REWARD = 5
-export const TRADER_HEALTH_PACK_REWARD = 5
-
 /** Duration (ms) a shot trader stays angry and untradeable */
 export const TRADER_ANGRY_DURATION_MS = 5 * 60 * 1000
+
+/** After closing an encounter without a kill/trade, the survivor ignores the
+ * player this long so walking away doesn't re-trigger it instantly. */
+export const ENCOUNTER_PACIFIED_MS = 6000
 
 /** Zombie contact damage: min/max fraction of max health (0.05 = 5%) */
 export const ZOMBIE_CONTACT_DAMAGE_MIN = 0.05

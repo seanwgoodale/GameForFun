@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { expandVision } from '../fogVision.js'
-import { applyScoreDelta, pointsForAnswer } from '../scoring.js'
+import { applyScoreDelta } from '../scoring.js'
 import { applyDamage, entityCenter, patchEntity } from '../world.js'
 import { makeTestWorld, makeZombie } from './helpers.js'
 
@@ -73,11 +73,6 @@ describe('expandVision', () => {
 })
 
 describe('scoring', () => {
-  it('awards points only for correct answers', () => {
-    expect(pointsForAnswer(true)).toBeGreaterThan(0)
-    expect(pointsForAnswer(false)).toBe(0)
-  })
-
   it('never lets the score go negative', () => {
     expect(applyScoreDelta(5, -10)).toBe(0)
     expect(applyScoreDelta(5, 10)).toBe(15)

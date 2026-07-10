@@ -2,14 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { audio } from '../../game/audio.js'
 import { useMapControls } from '../../hooks/useMapControls.js'
 import { useTimer } from '../../hooks/useTimer.js'
-import {
-  MAX_HEALTH,
-  ROUND_DURATION_SEC,
-  WEAPON_KILL_CHANCE_PERCENT,
-} from '../../utils/constants.js'
+import { MAX_HEALTH, ROUND_DURATION_SEC } from '../../utils/constants.js'
 import { formatTime } from '../../utils/helpers.js'
 import { CanvasMap } from '../game/CanvasMap.jsx'
-import { EncounterModal } from '../game/EncounterModal.jsx'
+import { EncounterPanel } from '../game/EncounterPanel.jsx'
 import { MinimapOverlay } from '../game/MinimapOverlay.jsx'
 import { TouchControls } from '../game/TouchControls.jsx'
 
@@ -106,16 +102,6 @@ export function GameScreen({ onTimeUp, game }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [playing, encounterId, fireRangedWeapon, consumeHealthPack])
-
-  const encounterBadge =
-    game.encounterEntity?.kind === 'trader'
-      ? 'Trade'
-      : game.encounterEntity?.kind === 'zombie'
-        ? 'Hostile'
-        : 'Encounter'
-  const hostileEncounter =
-    game.encounterEntity?.kind === 'zombie' ||
-    game.encounterEntity?.kind === 'trader'
 
   const healthFrac = Math.max(0, Math.min(1, game.health / MAX_HEALTH))
   const lowTime = remaining <= 60
@@ -260,23 +246,16 @@ export function GameScreen({ onTimeUp, game }) {
         game={game}
       />
 
-      <EncounterModal
-        open={Boolean(game.encounterId && game.encounterScenario)}
-        badgeLabel={encounterBadge}
-        title={game.encounterScenario?.title ?? ''}
-        prompt={game.encounterScenario?.prompt ?? ''}
-        options={game.encounterScenario?.options ?? []}
-        onSelect={(i) => game.submitEncounterAnswer(i)}
-        weapons={game.weapons}
-        weaponKillChancePercent={WEAPON_KILL_CHANCE_PERCENT}
-        onTryWeapon={game.tryWeaponOnEncounter}
-        weaponFeedback={game.weaponFeedback}
-        showPlayerVitals={Boolean(hostileEncounter)}
-        playerHealth={game.health}
-        playerHealthMax={MAX_HEALTH}
-        encounterStep={game.encounterStep ?? 'question'}
-        isTrader={game.encounterEntity?.kind === 'trader'}
-        onPickReward={game.pickTraderReward}
+      <EncounterPanel
+        open={Boolean(game.encounterId && game.encounter)}
+        encounter={game.encounter}
+        step={game.encounterStep ?? 'choice'}
+        result={game.encounterResult}
+        health={game.health}
+        ammo={game.weapons}
+        medkits={game.healthPacks}
+        onChoose={(i) => game.resolveEncounterChoice(i)}
+        onContinue={game.dismissEncounterResult}
       />
     </div>
   )

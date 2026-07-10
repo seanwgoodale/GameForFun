@@ -27,9 +27,9 @@ import { expandVision } from './fogVision.js'
  *   zombiesKilled: number
  *   playing: boolean
  *   encounterId: string | null
- *   encounterStep: 'question' | 'reward'
+ *   encounterStep: 'choice' | 'result'
+ *   encounterResult: { text: string; effects: object } | null
  *   encounterQuota: number
- *   weaponFeedback: 'hit' | 'miss' | null
  *   exitBlocked: boolean
  *   exitReached: boolean
  *   pendingEndScore: number | null
@@ -73,9 +73,9 @@ export function createWorld() {
     zombiesKilled: 0,
     playing: false,
     encounterId: null,
-    encounterStep: 'question',
+    encounterStep: 'choice',
+    encounterResult: null,
     encounterQuota: 0,
-    weaponFeedback: null,
     exitBlocked: false,
     exitReached: false,
     pendingEndScore: null,

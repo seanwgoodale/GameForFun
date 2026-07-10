@@ -12,12 +12,20 @@ import {
   RADIATION_PULSE_SHRINK_MIN,
 } from '../utils/constants.js'
 import { cellKey } from '../utils/helpers.js'
+import {
+  hostileEncounterIds,
+  traderEncounterIds,
+} from '../data/encounters.js'
 
 /** @typedef {'radiation' | 'zombie' | 'trader' | 'pickup' | 'house'} EntityKind */
 /** @typedef {'health' | 'weapon'} PickupType */
 /** @typedef {{ id: string; kind: EntityKind; x: number; y: number; scenarioId?: string; defeated?: boolean; pickupType?: PickupType }} MapEntity */
 
-const ENCOUNTER_IDS = ['enc-001', 'enc-002', 'enc-003']
+/** Seed-deterministic encounter draw, themed to the entity kind. */
+function pickEncounterId(kind, rand) {
+  const pool = kind === 'trader' ? traderEncounterIds : hostileEncounterIds
+  return pool[Math.floor(rand() * pool.length)]
+}
 
 /** @param {number} seed */
 function mulberry32(seed) {
@@ -756,7 +764,6 @@ export function generateLevel(params) {
 
     /** @type {MapEntity[]} */
     const entities = []
-    let si = 0
     const usedKeys = new Set([helipadZombieKey, helipadTraderKey])
 
     const hostileBuckets = partitionKeysByQuadrant(
@@ -804,7 +811,7 @@ export function generateLevel(params) {
         x: x + 0.5,
         y: y + 0.5,
         ...dir,
-        scenarioId: ENCOUNTER_IDS[si++ % ENCOUNTER_IDS.length],
+        scenarioId: pickEncounterId('zombie', rand),
       })
     }
     for (let i = 0; i < effTraders; i++) {
@@ -818,7 +825,7 @@ export function generateLevel(params) {
         x: x + 0.5,
         y: y + 0.5,
         ...dir,
-        scenarioId: ENCOUNTER_IDS[si++ % ENCOUNTER_IDS.length],
+        scenarioId: pickEncounterId('trader', rand),
       })
     }
     if (effTraders === 0) {
@@ -830,7 +837,7 @@ export function generateLevel(params) {
         x: tx + 0.5,
         y: ty + 0.5,
         ...dir,
-        scenarioId: ENCOUNTER_IDS[si++ % ENCOUNTER_IDS.length],
+        scenarioId: pickEncounterId('trader', rand),
       })
     }
 
@@ -958,7 +965,7 @@ export function generateLevel(params) {
             x: gx + 0.5,
             y: gy + 0.5,
             ...dir,
-            scenarioId: ENCOUNTER_IDS[si++ % ENCOUNTER_IDS.length],
+            scenarioId: pickEncounterId(useZombies ? 'zombie' : 'trader', rand),
           })
         }
       }
