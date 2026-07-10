@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { EndScreen } from './components/screens/EndScreen.jsx'
 import { GameScreen } from './components/screens/GameScreen.jsx'
 import { HomeScreen } from './components/screens/HomeScreen.jsx'
-import { useGameState } from './hooks/useGameState.js'
+import { useGame } from './hooks/useGame.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 import { LEADERBOARD_NAME_MAX_LENGTH, STORAGE_KEYS } from './utils/constants.js'
 
@@ -14,7 +14,7 @@ export default function App() {
   const [lastScore, setLastScore] = useState(0)
   const [isNewRecord, setIsNewRecord] = useState(false)
 
-  const game = useGameState()
+  const game = useGame()
   const [stored, setStored] = useLocalStorage(
     STORAGE_KEYS.highScore,
     defaultLeaderboard,

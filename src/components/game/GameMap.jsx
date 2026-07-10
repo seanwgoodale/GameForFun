@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { RADIATION_PULSE_MAX, RADIATION_PULSE_MIN, STARTING_HEALTH } from '../../utils/constants.js'
+import { MAX_HEALTH, RADIATION_PULSE_MAX, RADIATION_PULSE_MIN } from '../../utils/constants.js'
 import { cellKey, getRadiationPulseRadius } from '../../utils/helpers.js'
 import {
   HELIPAD_ICON,
@@ -51,7 +51,9 @@ export function GameMap({
   movementEnabled,
   touchAnalogRef,
 }) {
-  const [pulseTick, setPulseTick] = useState(0)
+  // Radiation pulse radius is a function of wall-clock time; re-render on a
+  // cadence so the circles animate even when the sim publishes no changes.
+  const [, setPulseTick] = useState(0)
   useEffect(() => {
     const id = setInterval(() => setPulseTick((t) => t + 1), 300)
     return () => clearInterval(id)
@@ -76,14 +78,6 @@ export function GameMap({
       const ey = Number.isInteger(e.y) ? e.y : Math.floor(e.y)
       return ex === wx && ey === wy
     })
-  }
-
-  function isHostileMapGlyph(e) {
-    return (
-      e.kind === 'zombie' ||
-      e.kind === 'trader' ||
-      e.kind === 'radiation'
-    )
   }
 
   function glyphForEntity(e) {
@@ -563,14 +557,14 @@ export function GameMap({
           Vitals:{' '}
           <span
             className={
-              health < STARTING_HEALTH * 0.35
+              health < MAX_HEALTH * 0.35
                 ? 'font-semibold text-rose-400'
                 : 'text-amber-100'
             }
           >
-            {health}
+            {Math.round(health)}
           </span>
-          <span className="text-amber-200/40"> / {STARTING_HEALTH}</span>
+          <span className="text-amber-200/40"> / {MAX_HEALTH}</span>
         </span>
         <span>
           Ammo:{' '}

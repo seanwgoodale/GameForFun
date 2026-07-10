@@ -10,8 +10,8 @@ import {
   RADIATION_PULSE_REST_MIN,
   RADIATION_PULSE_SHRINK_MAX,
   RADIATION_PULSE_SHRINK_MIN,
-} from './constants.js'
-import { cellKey } from './helpers.js'
+} from '../utils/constants.js'
+import { cellKey } from '../utils/helpers.js'
 
 /** @typedef {'radiation' | 'zombie' | 'trader' | 'pickup' | 'house'} EntityKind */
 /** @typedef {'health' | 'weapon'} PickupType */

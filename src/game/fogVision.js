@@ -1,4 +1,4 @@
-import { cellKey } from './helpers.js'
+import { cellKey } from '../utils/helpers.js'
 
 /**
  * Chebyshev (square) vision — adds tiles within `radius` steps of the player.

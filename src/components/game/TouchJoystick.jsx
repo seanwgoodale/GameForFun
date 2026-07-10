@@ -21,9 +21,18 @@ export function TouchJoystick({ disabled, analogRef }) {
     setKnob({ x: 0, y: 0 })
   }, [analogRef])
 
+  // Render-phase adjustment (not an effect): snap the knob home when disabled.
+  if (disabled && (knob.x !== 0 || knob.y !== 0)) {
+    setKnob({ x: 0, y: 0 })
+  }
+
   useEffect(() => {
-    if (disabled) release()
-  }, [disabled, release])
+    if (disabled) {
+      activeRef.current = false
+      analogRef.current.x = 0
+      analogRef.current.y = 0
+    }
+  }, [disabled, analogRef])
 
   const updateFromClient = useCallback(
     (clientX, clientY) => {

@@ -1,4 +1,4 @@
-import { POINTS_PER_CORRECT } from './constants.js'
+import { POINTS_PER_CORRECT } from '../utils/constants.js'
 
 /**
  * @param {boolean} isCorrect

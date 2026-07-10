@@ -1,5 +1,5 @@
-import { cellKey } from './helpers.js'
-import { clamp } from './helpers.js'
+import { cellKey } from '../utils/helpers.js'
+import { clamp } from '../utils/helpers.js'
 
 /**
  * Circle vs axis-aligned rectangle (tile occupies [rx, rx+rw] × [ry, ry+rh]).

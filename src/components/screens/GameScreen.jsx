@@ -69,8 +69,14 @@ export function GameScreen({ onTimeUp, game }) {
     if (game.encounterId) setMinimapOpen(false)
   }, [game.encounterId])
 
+  const {
+    playing,
+    encounterId,
+    fireRangedWeapon,
+    useHealthPack: consumeHealthPack,
+  } = game
   useEffect(() => {
-    if (!game.playing) {
+    if (!playing) {
       setMinimapOpen(false)
       return
     }
@@ -80,15 +86,15 @@ export function GameScreen({ onTimeUp, game }) {
         setMinimapOpen(false)
         return
       }
-      if (game.encounterId) return
+      if (encounterId) return
       if (e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault()
-        game.fireRangedWeapon?.()
+        fireRangedWeapon()
         return
       }
       if (e.key === 'h' || e.key === 'H') {
         e.preventDefault()
-        if (game.healthPacks > 0) game.useHealthPack?.()
+        consumeHealthPack()
         return
       }
       if (e.key === 'm' || e.key === 'M') {
@@ -98,7 +104,7 @@ export function GameScreen({ onTimeUp, game }) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [game.playing, game.encounterId, game.useHealthPack, game.healthPacks])
+  }, [playing, encounterId, fireRangedWeapon, consumeHealthPack])
 
   const encounterBadge =
     game.encounterEntity?.kind === 'trader'
