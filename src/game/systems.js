@@ -164,6 +164,7 @@ function checkExit(world) {
       world.score += GOAL_BONUS
       world.playing = false
       world.pendingEndScore = world.score
+      world.endReason = 'extract'
       pushEvent(world, { type: 'extract' })
       touch(world)
     } else if (!world.exitBlocked) {

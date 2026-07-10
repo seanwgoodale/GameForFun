@@ -79,6 +79,7 @@ export function createWorld() {
     exitBlocked: false,
     exitReached: false,
     pendingEndScore: null,
+    endReason: null,
     projectile: null,
     hostileProjectile: null,
     pendingEffects: [],
@@ -123,6 +124,7 @@ export function applyDamage(world, amount) {
   if (world.health <= 0 && world.playing) {
     world.playing = false
     world.pendingEndScore = world.score
+    world.endReason = 'death'
     pushEvent(world, { type: 'death' })
   }
   touch(world)

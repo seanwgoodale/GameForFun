@@ -35,24 +35,24 @@ export function GameScreen({ onTimeUp, game }) {
     clearPendingRef.current = game.clearPendingEnd
   }, [game.clearPendingEnd])
 
-  const notifyEnd = useCallback((finalScore) => {
+  const notifyEnd = useCallback((finalScore, reason) => {
     if (endedRef.current) return
     endedRef.current = true
     gameStopRef.current()
     clearPendingRef.current()
-    onTimeUpRef.current(finalScore)
+    onTimeUpRef.current(finalScore, reason)
   }, [])
 
   const { remaining } = useTimer({
     durationSec: ROUND_DURATION_SEC,
     autoStart: true,
-    onComplete: () => notifyEnd(scoreRef.current),
+    onComplete: () => notifyEnd(scoreRef.current, 'time'),
   })
 
   useEffect(() => {
     if (game.pendingEndScore == null) return
-    notifyEnd(game.pendingEndScore)
-  }, [game.pendingEndScore, notifyEnd])
+    notifyEnd(game.pendingEndScore, game.endReason ?? 'time')
+  }, [game.pendingEndScore, game.endReason, notifyEnd])
 
   const movementEnabled = Boolean(game.playing && !game.encounterId)
   const [minimapOpen, setMinimapOpen] = useState(false)

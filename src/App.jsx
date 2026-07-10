@@ -12,6 +12,7 @@ export default function App() {
   const [screen, setScreen] = useState('home')
   const [runKey, setRunKey] = useState(0)
   const [lastScore, setLastScore] = useState(0)
+  const [endReason, setEndReason] = useState('time')
   const [isNewRecord, setIsNewRecord] = useState(false)
 
   const game = useGame()
@@ -33,8 +34,9 @@ export default function App() {
   }
 
   const handleTimeUp = useCallback(
-    (finalScore) => {
+    (finalScore, reason = 'time') => {
       setLastScore(finalScore)
+      setEndReason(reason)
       const newRecord = finalScore > leaderboard.score && finalScore > 0
       setIsNewRecord(newRecord)
       if (newRecord) {
@@ -79,6 +81,7 @@ export default function App() {
       {screen === 'end' ? (
         <EndScreen
           score={lastScore}
+          endReason={endReason}
           leaderboard={leaderboard}
           isNewRecord={isNewRecord}
           onSaveLeaderName={handleSaveLeaderName}

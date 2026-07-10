@@ -872,11 +872,19 @@ export function generateLevel(params) {
       effRadiation + numHealthPickups + numWeaponPickups
     if (restPool.length < clutterSubNeed) continue
 
+    // Radiation keeps clear of the vault door: no first-second dose at spawn.
+    const radClearance = 10
+    const radPool = restPool.filter((k) => {
+      const [x, y] = k.split(',').map(Number)
+      return (
+        chebyshevFromSpawn(x, y, playerStart.x, playerStart.y) >= radClearance
+      )
+    })
     const radEntities = placeRadiationClusters(
       wallSet,
       cols,
       rows,
-      restPool,
+      radPool,
       effRadiation,
       usedKeys,
       seed,

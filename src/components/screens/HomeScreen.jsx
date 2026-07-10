@@ -1,48 +1,82 @@
-import { Badge } from '../ui/Badge.jsx'
-import { Button } from '../ui/Button.jsx'
-import { Card } from '../ui/Card.jsx'
-
 /**
  * @param {{ onStart: () => void; leaderboard: { score: number; name: string } }} props
  */
 export function HomeScreen({ onStart, leaderboard }) {
   const { score, name } = leaderboard ?? { score: 0, name: '' }
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-8 px-4 py-12 animate-fade-in">
-      <header className="space-y-3 text-center">
-        <Badge tone="success">Wasteland op</Badge>
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-50 sm:text-5xl">
-          Wasteland Escape
-        </h1>
-        <p className="text-slate-400">
-          You&apos;re at the vault hatch. Step outside into the wastes, thread
-          hotspots and hostiles, and reach the helipad before the clock hits
-          zero.
-        </p>
-      </header>
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#0c0a08] px-4 py-10">
+      {/* Ambient backdrop: static + vignette */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-45"
+        style={{
+          backgroundImage:
+            'radial-gradient(ellipse at 50% 30%, rgba(192,127,46,0.14), transparent 55%), radial-gradient(ellipse at 85% 85%, rgba(182,201,63,0.05), transparent 45%)',
+        }}
+        aria-hidden
+      />
+      <div className="animate-fade-in relative w-full max-w-md">
+        <header className="text-center">
+          <p className="text-[10px] font-bold tracking-[0.5em] text-amber-200/45">
+            SECTOR 7 · EXTRACTION PROTOCOL
+          </p>
+          <h1
+            className="mt-3 text-5xl font-black uppercase leading-none tracking-tight text-amber-100 sm:text-6xl"
+            style={{ textShadow: '0 2px 0 #4a2c10, 0 5px 18px rgba(192,127,46,0.35)' }}
+          >
+            Wasteland
+            <span className="block text-amber-400">Escape</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-amber-100/60">
+            The vault door is open behind you and it will not open twice. Cross
+            the wastes, put down ten of the walking dead, and reach the helipad
+            before the rotors spin down.
+          </p>
+        </header>
 
-      <Card className="space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">
-              Best run
-            </p>
-            <p className="text-2xl font-semibold tabular-nums text-slate-50">
-              {score}
-            </p>
-            {name ? (
-              <p className="mt-0.5 text-sm text-slate-400">by {name}</p>
-            ) : null}
+        <div className="mt-8 rounded-xl border border-amber-100/15 bg-black/40 p-5 backdrop-blur-[2px]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[9px] font-bold tracking-[0.22em] text-amber-200/45">
+                BEST RUN
+              </p>
+              <p className="font-mono text-3xl font-bold tabular-nums text-amber-100">
+                {score}
+              </p>
+              {name ? (
+                <p className="mt-0.5 text-xs text-amber-200/55">by {name}</p>
+              ) : null}
+            </div>
+            <div className="text-right text-[11px] leading-relaxed text-amber-200/50">
+              <p>10:00 on the clock</p>
+              <p>10 hostiles to drop</p>
+              <p>1 way out</p>
+            </div>
           </div>
-          <div className="text-right text-sm text-slate-400">
-            <p>Timer: 10:00</p>
-            <p>Smooth movement · line of sight · roaming threats</p>
+
+          <button
+            type="button"
+            onClick={onStart}
+            className="mt-5 w-full rounded-lg border-2 border-amber-400/50 bg-gradient-to-b from-amber-600/70 to-amber-800/70 px-6 py-3.5 text-base font-black uppercase tracking-[0.22em] text-amber-50 shadow-[0_4px_20px_rgba(192,127,46,0.3)] transition hover:from-amber-500/70 hover:to-amber-700/70 active:scale-[0.99]"
+          >
+            Exit the vault
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] tracking-wider text-amber-200/40">
+          <div className="rounded-md border border-amber-100/10 bg-black/30 px-2 py-2">
+            <p className="font-bold text-amber-200/60">MOVE</p>
+            <p className="mt-0.5">WASD · stick</p>
+          </div>
+          <div className="rounded-md border border-amber-100/10 bg-black/30 px-2 py-2">
+            <p className="font-bold text-amber-200/60">FIGHT</p>
+            <p className="mt-0.5">SPACE · FIRE</p>
+          </div>
+          <div className="rounded-md border border-amber-100/10 bg-black/30 px-2 py-2">
+            <p className="font-bold text-amber-200/60">SURVIVE</p>
+            <p className="mt-0.5">H · MED</p>
           </div>
         </div>
-        <Button className="w-full py-3 text-base" onClick={onStart}>
-          Exit the vault
-        </Button>
-      </Card>
+      </div>
     </div>
   )
 }

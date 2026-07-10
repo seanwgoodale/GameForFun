@@ -204,6 +204,7 @@ function buildSnapshot(world) {
     zombiesToEliminate: ZOMBIES_TO_ELIMINATE,
     exitBlocked: world.exitBlocked,
     pendingEndScore: world.pendingEndScore,
+    endReason: world.endReason,
     exitCell: { ...world.exitCell },
     spawnCell: { ...world.spawnCell },
   }
