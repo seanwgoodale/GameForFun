@@ -10,11 +10,14 @@ clock runs out.
 ## Gameplay
 
 - Procedurally generated 84×56 tile world with fog of war — every run is a new map
-- Smooth 360° movement (WASD / arrows on desktop, virtual joystick on touch)
-- Roaming zombies and traders, radiation hotspots that pulse and drift
-- Encounters: talk your way through or spend sidearm charges
-- Scavenge medkits and ammo; rest houses restore vitals
-- Eliminate 10 zombies to unlock extraction at the helipad
+- Custom Canvas 2D renderer with hand-authored pixel-art sprites, particles,
+  screen shake, and synthesized WebAudio sound (geiger clicks, heartbeat, wind)
+- Smooth 360° movement (WASD / arrows on desktop; joystick + FIRE/MED buttons on touch)
+- Diegetic encounters: 25 authored situations with risk/reward choices —
+  spend ammo for certainty, gamble bare-handed, barter with survivors, or walk away
+- Roaming zombies and traders, pulsing radiation hotspots, scavengeable medkits
+  and ammo, rest houses that restore vitals
+- Eliminate 10 hostiles to unlock extraction at the helipad before the clock dies
 
 ### Controls
 
@@ -36,8 +39,12 @@ npm run lint      # eslint
 npm test          # vitest (pure game-logic tests)
 ```
 
-Stack: React 19 · Vite 8 · Tailwind CSS 4. Game simulation lives in plain-JS modules
-under `src/game/`; React renders the world and HUD.
+Stack: React 19 · Vite 8 · Tailwind CSS 4. The simulation lives in plain-JS modules
+under `src/game/` (single fixed-timestep loop, world-time effects); `src/render/`
+draws the world on a canvas (sprite atlas, baked terrain, fog, particles); React
+handles screens, HUD overlay, and the encounter panel. All art is generated from
+pixel matrices in `src/render/sprites.js`; all audio is synthesized — the repo
+ships zero binary assets.
 
 ## Deployment
 
