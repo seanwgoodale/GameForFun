@@ -41,6 +41,12 @@ import {
   ZOMBIE_CONTACT_DAMAGE_MAX,
   ZOMBIE_CONTACT_DAMAGE_MIN,
 } from '../utils/constants.js'
+import {
+  chainedEncounters,
+  getEncounterById,
+  hostileEncounterIds,
+  traderEncounterIds,
+} from '../data/encounters.js'
 import { cellKey, getRadiationPulseRadius } from '../utils/helpers.js'
 import { expandVision } from './fogVision.js'
 import { tickEntityPositions } from './levelGen.js'
@@ -419,6 +425,9 @@ function triggerEncounter(world, now) {
     if (world.hostileApproach.get(e.id) === 'no-engage') continue
     const ec = entityCenter(e)
     if (distSq(x, y, ec.x, ec.y) < PLAYER_INTERACT_RADIUS_SQ) {
+      const chosen = chooseEncounterId(world, e)
+      if (chosen !== e.scenarioId) patchEntity(world, e.id, { scenarioId: chosen })
+      world.seenEncounters.add(chosen)
       world.encounterId = e.id
       world.encounterStep = 'choice'
       world.encounterResult = null
@@ -427,6 +436,37 @@ function triggerEncounter(world, now) {
       break
     }
   }
+}
+
+/**
+ * Pick what actually plays when a survivor is engaged: flag-gated payoffs
+ * take priority, then the entity's assigned encounter if still fresh, then
+ * any unseen one from the kind's pool; repeats only once the deck runs dry.
+ * @param {import('./world.js').World} world
+ * @param {object} entity
+ * @param {() => number} [rng]
+ */
+export function chooseEncounterId(world, entity, rng = Math.random) {
+  const payoffs = chainedEncounters.filter(
+    (enc) =>
+      enc.kind === entity.kind &&
+      world.flags.has(enc.requiresFlag) &&
+      !world.seenEncounters.has(enc.id),
+  )
+  if (payoffs.length > 0) {
+    return payoffs[Math.floor(rng() * payoffs.length)].id
+  }
+  const own = entity.scenarioId ? getEncounterById(entity.scenarioId) : null
+  if (own && !own.requiresFlag && !world.seenEncounters.has(own.id)) {
+    return own.id
+  }
+  const pool =
+    entity.kind === 'trader' ? traderEncounterIds : hostileEncounterIds
+  const fresh = pool.filter((id) => !world.seenEncounters.has(id))
+  if (fresh.length > 0) return fresh[Math.floor(rng() * fresh.length)]
+  return own && !own.requiresFlag
+    ? own.id
+    : pool[Math.floor(rng() * pool.length)]
 }
 
 function applyZombieContact(world, now, rng) {

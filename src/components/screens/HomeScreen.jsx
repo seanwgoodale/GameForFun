@@ -3,16 +3,24 @@ import { DIFFICULTIES } from '../../utils/constants.js'
 /**
  * @param {{
  *   onStart: () => void
- *   leaderboard: { score: number; name: string }
+ *   onDaily: () => void
+ *   board: { entries: { score: number; name: string }[] }
  *   difficulty: string
  *   onSelectDifficulty: (key: string) => void
+ *   seedLocked?: boolean
  * }} props
  */
-export function HomeScreen({ onStart, leaderboard, difficulty, onSelectDifficulty }) {
-  const { score, name } = leaderboard ?? { score: 0, name: '' }
+export function HomeScreen({
+  onStart,
+  onDaily,
+  board,
+  difficulty,
+  onSelectDifficulty,
+  seedLocked = false,
+}) {
+  const best = board?.entries?.[0] ?? null
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#0c0a08] px-4 py-10">
-      {/* Ambient backdrop: static + vignette */}
       <div
         className="pointer-events-none absolute inset-0 opacity-45"
         style={{
@@ -47,10 +55,10 @@ export function HomeScreen({ onStart, leaderboard, difficulty, onSelectDifficult
                 BEST RUN
               </p>
               <p className="font-mono text-3xl font-bold tabular-nums text-amber-100">
-                {score}
+                {best?.score ?? 0}
               </p>
-              {name ? (
-                <p className="mt-0.5 text-xs text-amber-200/55">by {name}</p>
+              {best?.name ? (
+                <p className="mt-0.5 text-xs text-amber-200/55">by {best.name}</p>
               ) : null}
             </div>
             <div className="text-right text-[11px] leading-relaxed text-amber-200/50">
@@ -87,12 +95,25 @@ export function HomeScreen({ onStart, leaderboard, difficulty, onSelectDifficult
             </div>
           </div>
 
+          {seedLocked ? (
+            <p className="mt-3 rounded border border-amber-300/25 bg-amber-950/40 px-2 py-1 text-center font-mono text-[10px] tracking-wider text-amber-200/80">
+              SEEDED RUN — this link always deals the same wasteland
+            </p>
+          ) : null}
+
           <button
             type="button"
             onClick={onStart}
             className="mt-5 w-full rounded-lg border-2 border-amber-400/50 bg-gradient-to-b from-amber-600/70 to-amber-800/70 px-6 py-3.5 text-base font-black uppercase tracking-[0.22em] text-amber-50 shadow-[0_4px_20px_rgba(192,127,46,0.3)] transition hover:from-amber-500/70 hover:to-amber-700/70 active:scale-[0.99]"
           >
             Exit the vault
+          </button>
+          <button
+            type="button"
+            onClick={onDaily}
+            className="mt-2 w-full rounded-lg border border-amber-100/20 bg-black/40 px-6 py-2.5 text-xs font-bold uppercase tracking-[0.2em] text-amber-200/75 transition hover:bg-black/60"
+          >
+            Daily run — same map for everyone today
           </button>
         </div>
 

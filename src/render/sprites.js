@@ -340,6 +340,13 @@ export const ARCHETYPE_PALETTES = {
   glower: { G: '#a7d94f', g: '#6f9d2c' }, // toxic bright
 }
 
+/** Canopy/trunk swaps per biome ('scrub' uses the base palette). */
+export const BIOME_TREE_PALETTES = {
+  ashfall: { T: '#6a6560', u: '#4c4844', q: '#3b3733' }, // burned grey
+  saltflat: { T: '#8a7a4e', u: '#665a37', q: '#57452c' }, // dry brush
+  overgrowth: { T: '#3f8a4e', u: '#2a6338', q: '#4c5a30' }, // lush
+}
+
 /**
  * @param {string[]} rows
  * @param {boolean} [flipX]
@@ -382,6 +389,10 @@ export function buildAtlas() {
   for (const [arch, pal] of Object.entries(ARCHETYPE_PALETTES)) {
     atlas[`zombie_${arch}`] = rasterize(DEFINITIONS.zombie, false, pal)
     atlas[`zombie_${arch}F`] = rasterize(DEFINITIONS.zombie, true, pal)
+  }
+  for (const [biome, pal] of Object.entries(BIOME_TREE_PALETTES)) {
+    atlas[`treeA_${biome}`] = rasterize(DEFINITIONS.treeA, false, pal)
+    atlas[`treeB_${biome}`] = rasterize(DEFINITIONS.treeB, false, pal)
   }
   return atlas
 }

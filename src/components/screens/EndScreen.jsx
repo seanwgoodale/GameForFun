@@ -25,9 +25,11 @@ const REASON_COPY = {
 /**
  * @param {{
  *   score: number
+ *   seed?: number | null
  *   endReason?: 'extract' | 'death' | 'time'
- *   leaderboard: { score: number; name: string }
- *   isNewRecord: boolean
+ *   board: { entries: { id: string; score: number; name: string; date: string; difficulty?: string }[] }
+ *   rank: number | null
+ *   entryId: string | null
  *   onSaveLeaderName: (name: string) => void
  *   onPlayAgain: () => void
  *   onHome: () => void
@@ -35,18 +37,20 @@ const REASON_COPY = {
  */
 export function EndScreen({
   score,
+  seed = null,
   endReason = 'time',
-  leaderboard,
-  isNewRecord,
+  board,
+  rank,
+  entryId,
   onSaveLeaderName,
   onPlayAgain,
   onHome,
 }) {
   const [nameInput, setNameInput] = useState('')
   const [nameSaved, setNameSaved] = useState(false)
-  const highScore = leaderboard?.score ?? 0
-  const leaderName = leaderboard?.name ?? ''
   const copy = REASON_COPY[endReason] ?? REASON_COPY.time
+  const isNewRecord = rank === 1
+  const entries = board?.entries ?? []
 
   const handleSubmitName = () => {
     const trimmed = nameInput.trim().slice(0, LEADERBOARD_NAME_MAX_LENGTH)
@@ -56,7 +60,7 @@ export function EndScreen({
     }
   }
 
-  const showNameInput = isNewRecord && !nameSaved
+  const showNameInput = rank != null && entryId && !nameSaved
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#0c0a08] px-4 py-10">
@@ -96,6 +100,15 @@ export function EndScreen({
             <p className="mt-1 text-xs font-bold tracking-[0.2em] text-emerald-300">
               NEW RECORD
             </p>
+          ) : rank != null ? (
+            <p className="mt-1 text-xs font-bold tracking-[0.2em] text-amber-300">
+              #{rank} ON THE BOARD
+            </p>
+          ) : null}
+          {seed != null ? (
+            <p className="mt-1 font-mono text-[10px] tracking-wider text-amber-200/40">
+              SEED {seed} — add ?seed={seed} to the URL to replay this map
+            </p>
           ) : null}
 
           {showNameInput ? (
@@ -128,17 +141,35 @@ export function EndScreen({
             </div>
           ) : null}
 
-          <div className="mt-5 border-t border-amber-100/10 pt-4">
-            <p className="text-[9px] font-bold tracking-[0.22em] text-amber-200/45">
-              BEST SO FAR
-            </p>
-            <p className="mt-1 font-mono text-2xl font-bold tabular-nums text-amber-100/90">
-              {highScore}
-            </p>
-            {leaderName ? (
-              <p className="mt-0.5 text-xs text-amber-200/55">by {leaderName}</p>
-            ) : null}
-          </div>
+          {entries.length > 0 ? (
+            <div className="mt-5 border-t border-amber-100/10 pt-4 text-left">
+              <p className="text-center text-[9px] font-bold tracking-[0.22em] text-amber-200/45">
+                THE BOARD
+              </p>
+              <ol className="mt-2 space-y-1">
+                {entries.slice(0, 5).map((e, i) => (
+                  <li
+                    key={e.id}
+                    className={`flex items-baseline justify-between rounded px-2 py-1 font-mono text-xs ${
+                      e.id === entryId
+                        ? 'bg-amber-900/40 text-amber-100'
+                        : 'text-amber-200/60'
+                    }`}
+                  >
+                    <span>
+                      {i + 1}. {e.name || 'unnamed survivor'}
+                      {e.difficulty ? (
+                        <span className="ml-1.5 text-[9px] uppercase opacity-60">
+                          {e.difficulty}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="tabular-nums">{e.score}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-4 flex flex-col gap-2.5 sm:flex-row">

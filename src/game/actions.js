@@ -97,6 +97,7 @@ export function resolveEncounterChoice(
     })
     pushEvent(world, { type: 'anger', x: entity.x, y: entity.y })
   }
+  if (fx.flag) world.flags.add(fx.flag)
 
   world.encounterResult = { text: outcome.text, effects: fx }
   world.encounterStep = 'result'

@@ -633,6 +633,10 @@ export function generateLevel(params) {
 
   const rand = mulberry32(seed >>> 0)
 
+  /** Biome is cosmetic (renderer palettes) but part of the seed's identity. */
+  const biomes = ['scrub', 'ashfall', 'saltflat', 'overgrowth']
+  const biome = biomes[Math.floor(rand() * biomes.length)]
+
   const effZombies = Math.max(1, Math.round(numZombies))
   const effTraders = Math.max(0, Math.round(numTraders))
   const effRadiation = Math.max(1, Math.round(numRadiation))
@@ -976,6 +980,7 @@ export function generateLevel(params) {
       exitCell,
       entities,
       pathSet,
+      biome,
     }
   }
 
@@ -997,6 +1002,7 @@ export function generateLevel(params) {
     exitCell: { x: cols - 2, y: rows - 2 },
     entities: [],
     pathSet: new Set(),
+    biome,
   }
 }
 

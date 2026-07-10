@@ -101,6 +101,11 @@ export function createWorld() {
     seed: null,
     /** Side objective: null | { state, spawnAt, x?, y?, expiresAt?, rewarded? } */
     supplyDrop: null,
+    /** Story flags set by encounter outcomes; gate chained encounters. */
+    flags: new Set(),
+    /** Encounter ids already shown this run (keeps the deck fresh). */
+    seenEncounters: new Set(),
+    biome: 'scrub',
     lastMoveDir: { x: 0, y: 1 },
     wanderAccumMs: 0,
     lastVisionTile: null,
@@ -168,6 +173,7 @@ export function startRun(world, level, opts = {}) {
       SUPPLY_DROP_DELAY_MIN_MS +
       Math.random() * (SUPPLY_DROP_DELAY_MAX_MS - SUPPLY_DROP_DELAY_MIN_MS),
   }
+  world.biome = level.biome ?? 'scrub'
   world.wallSet = level.wallSet
   world.pathSet =
     level.pathSet instanceof Set

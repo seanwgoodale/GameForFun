@@ -12,10 +12,33 @@ function tileHash(x, y) {
   return (Math.imul(x + 11, 48271) ^ Math.imul(y + 7, 92837111)) >>> 0
 }
 
-const GROUND_BASE = '#232f1d'
-const GROUND_SPECKS = ['#1c2717', '#2a3823', '#20301c', '#3a3a28']
-const PATH_BASE = '#5d5140'
-const PATH_SPECKS = ['#524734', '#6a5d49', '#565040']
+/** Ground color scripts per biome (trees swap via the sprite atlas). */
+const BIOME_GROUND = {
+  scrub: {
+    base: '#232f1d',
+    specks: ['#1c2717', '#2a3823', '#20301c', '#3a3a28'],
+    path: '#5d5140',
+    pathSpecks: ['#524734', '#6a5d49', '#565040'],
+  },
+  ashfall: {
+    base: '#292624',
+    specks: ['#211f1d', '#33302d', '#3c3835', '#4a4440'],
+    path: '#443e39',
+    pathSpecks: ['#3a3531', '#504943', '#2f2b28'],
+  },
+  saltflat: {
+    base: '#4a4438',
+    specks: ['#3f3a2f', '#575040', '#625a48', '#6e6752'],
+    path: '#6a5f4a',
+    pathSpecks: ['#5d5340', '#786c54', '#554c3b'],
+  },
+  overgrowth: {
+    base: '#1c3322',
+    specks: ['#15281a', '#254529', '#2e5230', '#1f3a25'],
+    path: '#4d5738',
+    pathSpecks: ['#424b2f', '#5a6543', '#39422a'],
+  },
+}
 
 /**
  * Canvas 2D world renderer. Owns its own rAF loop, reads the store's live
@@ -104,12 +127,13 @@ export class GameRenderer {
     const ctx = terrain.getContext('2d')
     ctx.imageSmoothingEnabled = false
 
+    const ground = BIOME_GROUND[world.biome] ?? BIOME_GROUND.scrub
     for (let y = 0; y < world.rows; y++) {
       for (let x = 0; x < world.cols; x++) {
         const onPath = world.pathSet.has(cellKey(x, y))
-        ctx.fillStyle = onPath ? PATH_BASE : GROUND_BASE
+        ctx.fillStyle = onPath ? ground.path : ground.base
         ctx.fillRect(x * px, y * px, px, px)
-        const specks = onPath ? PATH_SPECKS : GROUND_SPECKS
+        const specks = onPath ? ground.pathSpecks : ground.specks
         // A few deterministic noise pixels per tile keeps the ground alive.
         for (let i = 0; i < 5; i++) {
           const hh = tileHash(x * 7 + i, y * 13 + i)
@@ -123,13 +147,18 @@ export class GameRenderer {
     }
 
     // Walls: rocks and trees on top of ground (border rows read as treeline).
+    const treeSuffix =
+      world.biome && world.biome !== 'scrub' ? `_${world.biome}` : ''
     for (const key of world.wallSet) {
       const [x, y] = key.split(',').map(Number)
       const h = tileHash(x, y)
-      const sprite =
-        h % 3 === 0
-          ? this.atlas[h % 2 === 0 ? 'rockA' : 'rockB']
-          : this.atlas[(h >> 3) % 2 === 0 ? 'treeA' : 'treeB']
+      let sprite
+      if (h % 3 === 0) {
+        sprite = this.atlas[h % 2 === 0 ? 'rockA' : 'rockB']
+      } else {
+        const base = (h >> 3) % 2 === 0 ? 'treeA' : 'treeB'
+        sprite = this.atlas[`${base}${treeSuffix}`] ?? this.atlas[base]
+      }
       ctx.drawImage(sprite, x * px, y * px)
     }
 

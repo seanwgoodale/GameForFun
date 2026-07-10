@@ -211,7 +211,7 @@ export const encounters = [
         detail: 'Kill it before the noise draws more',
         cost: { ammo: 1 },
         outcomes: [
-          { chance: 0.75, text: 'The ringing stops. The silence afterward feels like payment.', effects: { kill: true, score: 18 } },
+          { chance: 0.75, text: 'The ringing stops. The silence afterward feels like payment.', effects: { kill: true, score: 18, flag: 'bell-silenced' } },
           { chance: 0.25, text: 'You hit the bell instead. The clang is deafening — it’s on you before the echo dies.', effects: { health: -12 } },
         ],
       },
@@ -474,8 +474,8 @@ export const encounters = [
         label: 'Get patched up',
         detail: 'Free care, they take notes',
         outcomes: [
-          { chance: 0.75, text: 'Quick hands, clean sutures. “Tell people the doctor still walks the circuit.”', effects: { trade: true, health: 25, score: 10 } },
-          { chance: 0.25, text: 'They do what they can with what’s left in the case.', effects: { trade: true, health: 12, score: 8 } },
+          { chance: 0.75, text: 'Quick hands, clean sutures. “Tell people the doctor still walks the circuit.”', effects: { trade: true, health: 25, score: 10, flag: 'doctor-friend' } },
+          { chance: 0.25, text: 'They do what they can with what’s left in the case.', effects: { trade: true, health: 12, score: 8, flag: 'doctor-friend' } },
         ],
       },
       {
@@ -601,7 +601,7 @@ export const encounters = [
         label: 'Share your heading',
         detail: 'Point them true',
         outcomes: [
-          { chance: 0.75, text: 'You orient them by the ridge line. The blessing is concrete: rounds and a kit.', effects: { trade: true, ammo: 3, medkits: 1, score: 12 } },
+          { chance: 0.75, text: 'You orient them by the ridge line. The blessing is concrete: rounds and a kit.', effects: { trade: true, ammo: 3, medkits: 1, score: 12, flag: 'pilgrim-blessed' } },
           { chance: 0.25, text: 'They correct YOUR heading, gently, then bless you anyway.', effects: { trade: true, ammo: 2, score: 8 } },
         ],
       },
@@ -609,7 +609,7 @@ export const encounters = [
         label: 'Escort them a stretch',
         detail: 'Free, slow',
         outcomes: [
-          { chance: 0.6, text: 'A quiet mile together. At the fork they press supplies into your hands.', effects: { trade: true, medkits: 2, score: 14 } },
+          { chance: 0.6, text: 'A quiet mile together. At the fork they press supplies into your hands.', effects: { trade: true, medkits: 2, score: 14, flag: 'pilgrim-blessed' } },
           { chance: 0.4, text: 'Their pace is glacial and the sun is cruel, but the blessing is real.', effects: { trade: true, medkits: 1, health: -4, score: 8 } },
         ],
       },
@@ -649,7 +649,7 @@ export const encounters = [
       {
         label: 'Give a name and heading',
         outcomes: [
-          { chance: 0.7, text: 'Your entry gets a neat checkmark. The reward drawer holds rounds and a kit.', effects: { trade: true, ammo: 2, medkits: 1, score: 10 } },
+          { chance: 0.7, text: 'Your entry gets a neat checkmark. The reward drawer holds rounds and a kit.', effects: { trade: true, ammo: 2, medkits: 1, score: 10, flag: 'in-the-ledger' } },
           { chance: 0.3, text: 'They cross-reference you against nothing for ten minutes, then pay up anyway.', effects: { trade: true, ammo: 2, score: 6 } },
         ],
       },
@@ -687,17 +687,626 @@ export const encounters = [
       },
     ],
   },
+  // ───────────────────── hostiles: second wave ─────────────────────
+  {
+    id: 'z-overpass',
+    kind: 'zombie',
+    title: 'Dropper on the overpass',
+    text: 'Gravel trickles onto your shoulder. It’s above you on the broken overpass, leaning out further than balance should allow.',
+    choices: [
+      {
+        label: 'Shoot it off its perch',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.75, text: 'It pinwheels off the edge and lands wrong. Done.', effects: { kill: true, score: 16 } },
+          { chance: 0.25, text: 'The shot chips concrete. It drops ON you instead of near you.', effects: { health: -14 } },
+        ],
+      },
+      {
+        label: 'Bait it into jumping',
+        detail: 'Free, needs timing',
+        outcomes: [
+          { chance: 0.55, text: 'You stand, wait, step aside. Physics files its report.', effects: { kill: true, score: 14 } },
+          { chance: 0.45, text: 'You mistime the step. It clips you on the way down and still gets up first.', effects: { health: -12 } },
+        ],
+      },
+      {
+        label: 'Hug the wall and pass under',
+        outcomes: [
+          { chance: 0.8, text: 'It paces you overhead, loses interest at the gap.', effects: {} },
+          { chance: 0.2, text: 'It rains loose rebar down as you pass. One piece connects.', effects: { health: -7 } },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'z-chained',
+    kind: 'zombie',
+    title: 'The watchdog',
+    text: 'Someone chained it to a supply shed door before the end — a guard that never sleeps. The chain looks older than its patience.',
+    choices: [
+      {
+        label: 'Kill it, loot the shed',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.8, text: 'The chain finally goes slack. The shed holds a kit and loose rounds.', effects: { kill: true, score: 16, medkits: 1, ammo: 2 } },
+          { chance: 0.2, text: 'The chain snaps before your trigger does. Bad few seconds — but the shed pays out.', effects: { kill: true, score: 16, medkits: 1, health: -11 } },
+        ],
+      },
+      {
+        label: 'Test the chain’s reach',
+        detail: 'Free, geometry problem',
+        outcomes: [
+          { chance: 0.5, text: 'You chalk its radius and work the shed door from outside the arc. A kit for your trouble.', effects: { medkits: 1, score: 10 } },
+          { chance: 0.5, text: 'The anchor bolt was looser than it looked. You leave without the loot and with a new scar.', effects: { health: -12 } },
+        ],
+      },
+      {
+        label: 'Leave the guard its post',
+        outcomes: [{ chance: 1, text: 'Whatever’s in the shed, someone wanted it kept. You respect the arrangement.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-culvert',
+    kind: 'zombie',
+    title: 'Culvert lurker',
+    text: 'The drainage pipe is the only dry way under the highway. Something in the dark end of it breathes wet.',
+    choices: [
+      {
+        label: 'Clear it with a shot',
+        detail: 'Loud in a pipe',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.7, text: 'The muzzle flash shows you exactly one horror, now finished. Your ears will forgive you eventually.', effects: { kill: true, score: 15 } },
+          { chance: 0.3, text: 'The ricochet sings past your cheek. You finish it with the stock in the echoing dark.', effects: { kill: true, score: 15, health: -9 } },
+        ],
+      },
+      {
+        label: 'Crawl through fast and quiet',
+        outcomes: [
+          { chance: 0.55, text: 'You’re past it before it turns around. Your heart restarts on the far side.', effects: { score: 8 } },
+          { chance: 0.45, text: 'It catches your boot halfway. The fight is close, wet, and costly.', effects: { health: -15 } },
+        ],
+      },
+      {
+        label: 'Go over the highway instead',
+        outcomes: [{ chance: 1, text: 'Longer, hotter, drier. The pipe keeps its tenant.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-mannequin',
+    kind: 'zombie',
+    title: 'The store window',
+    text: 'Five mannequins in a looted storefront. You count six silhouettes.',
+    choices: [
+      {
+        label: 'Shoot the one that’s wrong',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.7, text: 'You pick the one with weight on its heels. Glass and worse hit the floor.', effects: { kill: true, score: 18 } },
+          { chance: 0.3, text: 'You shoot a mannequin. The real one objects to the noise.', effects: { health: -12 } },
+        ],
+      },
+      {
+        label: 'Wait for it to move',
+        detail: 'Free, patience game',
+        outcomes: [
+          { chance: 0.6, text: 'Ninety seconds. A twitch. You’re behind it before it finishes turning.', effects: { kill: true, score: 15 } },
+          { chance: 0.4, text: 'It was more patient than you. It moves when you blink.', effects: { health: -10 } },
+        ],
+      },
+      {
+        label: 'Skip the storefront',
+        outcomes: [{ chance: 1, text: 'Six silhouettes watch you leave. You don’t count again.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-buried',
+    kind: 'zombie',
+    title: 'Shallow grave',
+    text: 'A hand breaks the soil at the trail’s edge, then a wrist. Whoever buried it was in a hurry and short a shovel.',
+    choices: [
+      {
+        label: 'Finish what the burial started',
+        detail: 'Free, while it’s stuck',
+        outcomes: [
+          { chance: 0.8, text: 'It never gets its shoulders out. You tamp the soil back down.', effects: { kill: true, score: 14 } },
+          { chance: 0.2, text: 'It’s further out than it looked. The grave fight is short but filthy.', effects: { kill: true, score: 14, health: -8 } },
+        ],
+      },
+      {
+        label: 'Walk on and let it dig',
+        outcomes: [
+          { chance: 0.7, text: 'Someone else’s problem, some other day.', effects: {} },
+          { chance: 0.3, text: 'It grabs your ankle as you pass — hungrier than it is buried.', effects: { health: -8 } },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'z-carousel',
+    kind: 'zombie',
+    title: 'Playground rounds',
+    text: 'A rusted merry-go-round turns with no wind. It’s riding the thing — one foot dragging, pushing itself in slow circles. It sees you every third rotation.',
+    choices: [
+      {
+        label: 'Time the shot',
+        detail: 'Moving target, cheap physics',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.7, text: 'You wait for the apex of its arc. The ride finally stops.', effects: { kill: true, score: 16 } },
+          { chance: 0.3, text: 'You lead it wrong. It dismounts at speed, straight at you.', effects: { health: -11 } },
+        ],
+      },
+      {
+        label: 'Jam the ride and finish it',
+        detail: 'Free, hands-on',
+        outcomes: [
+          { chance: 0.55, text: 'A rebar through the mechanism. It spins itself into your swing.', effects: { kill: true, score: 13 } },
+          { chance: 0.45, text: 'The bar kicks back. So does the rider.', effects: { health: -12 } },
+        ],
+      },
+      {
+        label: 'Leave the playground alone',
+        outcomes: [{ chance: 1, text: 'The squeak of the ride follows you two streets further than it should.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-mirror',
+    kind: 'zombie',
+    title: 'The one in your jacket',
+    text: 'It’s wearing the same surplus jacket you are — same patch, same tear at the elbow. It stares like it’s trying to remember your face from the inside.',
+    choices: [
+      {
+        label: 'Don’t let it finish remembering',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.8, text: 'You tell yourself it was never you. Mostly it works.', effects: { kill: true, score: 15 } },
+          { chance: 0.2, text: 'You hesitate a half-second too long. It doesn’t.', effects: { health: -13 } },
+        ],
+      },
+      {
+        label: 'Check its pockets after a quiet kill',
+        detail: 'Free, morbid, thorough',
+        outcomes: [
+          { chance: 0.5, text: 'Same jacket, better luck: a field dressing kit in the lining.', effects: { kill: true, score: 14, medkits: 1 } },
+          { chance: 0.5, text: 'It wakes mid-search. You finish the job at cost.', effects: { kill: true, score: 14, health: -10 } },
+        ],
+      },
+      {
+        label: 'Walk away from the mirror',
+        outcomes: [{ chance: 1, text: 'Some questions don’t need answers. You keep your jacket on.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-busstop',
+    kind: 'zombie',
+    title: 'Waiting for the 9:40',
+    text: 'It sits at the bus stop the way it must have sat every morning for years. The bench has held its shape. The bus is thirty years late.',
+    choices: [
+      {
+        label: 'End the wait',
+        detail: 'Free, it doesn’t resist much',
+        outcomes: [
+          { chance: 0.85, text: 'It never stops watching the road. You make it quick.', effects: { kill: true, score: 12 } },
+          { chance: 0.15, text: 'Routine dies hard — harder than you expected.', effects: { kill: true, score: 12, health: -7 } },
+        ],
+      },
+      {
+        label: 'Sit down next to it',
+        detail: 'Reckless. Human.',
+        outcomes: [
+          { chance: 0.5, text: 'Two commuters, one road, no bus. When you stand up to leave, it doesn’t follow. Under the bench: someone’s old lunchbox, still packed.', effects: { score: 12, medkits: 1 } },
+          { chance: 0.5, text: 'It notices the company. Commute’s over.', effects: { health: -12 } },
+        ],
+      },
+      {
+        label: 'Let it keep waiting',
+        outcomes: [{ chance: 1, text: 'Maybe the bus comes eventually. Stranger things have happened out here.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-silo',
+    kind: 'zombie',
+    title: 'Echo in the silo',
+    text: 'The grain silo would make a defensible camp — one door, thick steel. From inside comes a shuffle that multiplies in the echo. One? Three? Ten?',
+    choices: [
+      {
+        label: 'Crack the door and count',
+        detail: 'Free, information first',
+        outcomes: [
+          { chance: 0.6, text: 'Just one, fat on thirty years of rats. It waddles into your knife.', effects: { kill: true, score: 15 } },
+          { chance: 0.4, text: 'Just one — but it was standing right at the door.', effects: { kill: true, score: 15, health: -10 } },
+        ],
+      },
+      {
+        label: 'Fire once through the vent slit',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.65, text: 'The echo makes one shot sound like a firing squad. The shuffling stops.', effects: { kill: true, score: 14 } },
+          { chance: 0.35, text: 'You hit grain dust and memories. The tenant keeps its silo.', effects: { score: 2 } },
+        ],
+      },
+      {
+        label: 'Camp somewhere with worse walls',
+        outcomes: [{ chance: 1, text: 'A defensible position isn’t worth the eviction fight.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-tarpit',
+    kind: 'zombie',
+    title: 'The asphalt pool',
+    text: 'Summer melted the old road into a black pool and it walked straight in. Now it’s set to the knees, a statue that hisses.',
+    choices: [
+      {
+        label: 'One round, zero risk',
+        cost: { ammo: 1 },
+        outcomes: [{ chance: 1, text: 'The easiest shot the wasteland will ever offer you.', effects: { kill: true, score: 12 } }],
+      },
+      {
+        label: 'Salvage around it',
+        detail: 'Free — it’s not going anywhere',
+        outcomes: [
+          { chance: 0.6, text: 'The pool caught more than the dead: a toolbox, half-sunk. Rounds inside.', effects: { ammo: 2, score: 10 } },
+          { chance: 0.4, text: 'The asphalt is softer than it looks. You lose a boot heel and some skin getting free of the shallows.', effects: { health: -8 } },
+        ],
+      },
+      {
+        label: 'Leave the statue',
+        outcomes: [{ chance: 1, text: 'In a hundred years someone will dig it up and wonder.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-lantern',
+    kind: 'zombie',
+    title: 'The lantern carrier',
+    text: 'It walks the tree line holding a lit lantern — carefully, the way you’d carry soup. Somebody lit that wick recently. The question is who, and why give it to the dead.',
+    choices: [
+      {
+        label: 'Drop it before the light draws more',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.75, text: 'It folds; you catch the lantern before it starts a fire. Good oil, too.', effects: { kill: true, score: 17 } },
+          { chance: 0.25, text: 'The lantern shatters. You put out the grass fire and the walker both, singed.', effects: { kill: true, score: 17, health: -9 } },
+        ],
+      },
+      {
+        label: 'Follow it at a distance',
+        detail: 'Free — someone lit that wick',
+        outcomes: [
+          { chance: 0.5, text: 'It leads you to a looted camp — looted by everyone except whoever left a medkit under the cot.', effects: { medkits: 1, score: 12 } },
+          { chance: 0.5, text: 'It leads you in a wide, pointless circle, then notices its shadow. And you.', effects: { health: -10 } },
+        ],
+      },
+      {
+        label: 'Let the light go by',
+        outcomes: [{ chance: 1, text: 'The lantern bobs away into the dark like a slow, wrong firefly.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-cistern',
+    kind: 'zombie',
+    title: 'Splashing in the cistern',
+    text: 'The rain cistern is the only clean water for a mile, and something is doing laps in it. Your canteen is light.',
+    choices: [
+      {
+        label: 'Fish it out and finish it',
+        detail: 'Free, wet work',
+        outcomes: [
+          { chance: 0.6, text: 'A pole, a hook, an ugly minute at the rim. The water needs a week to settle; your canteen gets filled upstream of the mess.', effects: { kill: true, score: 15, health: 6 } },
+          { chance: 0.4, text: 'It grabs the pole and pulls. You get it done at the waterline, half-in.', effects: { kill: true, score: 15, health: -11 } },
+        ],
+      },
+      {
+        label: 'Shoot into the water',
+        detail: 'Ricochet risk',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.6, text: 'The splashing stops. You drink from the inflow pipe, not the tank.', effects: { kill: true, score: 13, health: 6 } },
+          { chance: 0.4, text: 'Water eats bullets. You leave thirstier and lighter.', effects: { score: 2 } },
+        ],
+      },
+      {
+        label: 'Stay thirsty',
+        outcomes: [{ chance: 1, text: 'There’s cleaner water somewhere. Probably.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 'z-bell-herd',
+    kind: 'zombie',
+    requiresFlag: 'bell-silenced',
+    title: 'The herd that lost its bell',
+    text: 'A knot of walkers mills in the flat, turning in slow confusion — the ones that followed the cowbell you silenced. Leaderless, they’ve gone still and stupid.',
+    choices: [
+      {
+        label: 'Thin them while they’re lost',
+        detail: 'You made this opening',
+        cost: { ammo: 1 },
+        outcomes: [
+          { chance: 0.85, text: 'Without the bell they never coordinate. You drop the biggest and scatter the rest for good.', effects: { kill: true, score: 25, ammo: 1 } },
+          { chance: 0.15, text: 'One of them finds its focus mid-slaughter. You win, breathing hard.', effects: { kill: true, score: 25, health: -10 } },
+        ],
+      },
+      {
+        label: 'Slip through the confusion',
+        outcomes: [
+          { chance: 0.8, text: 'You walk straight through the middle of them like fog. The bell trick bought you this.', effects: { score: 15 } },
+          { chance: 0.2, text: 'One catches your scent halfway through. Just one — manageable.', effects: { health: -8, score: 10 } },
+        ],
+      },
+    ],
+  },
+
+  // ───────────────────── traders: second wave ─────────────────────
+  {
+    id: 't-cartographer',
+    kind: 'trader',
+    title: 'The cartographer',
+    text: 'Maps weighted down with spent shell casings, a pencil worn to a nub. “Every map here is wrong somewhere. Find me a wrongness and I’ll pay for it.”',
+    choices: [
+      {
+        label: 'Report what you’ve seen',
+        outcomes: [
+          { chance: 0.7, text: 'The collapsed bridge you passed isn’t on any sheet. They redraw it on the spot and pay in rounds.', effects: { trade: true, ammo: 3, score: 12 } },
+          { chance: 0.3, text: 'They knew about your wrongness already. Consolation round for the effort.', effects: { trade: true, ammo: 1, score: 5 } },
+        ],
+      },
+      {
+        label: 'Buy the radiation overlay',
+        cost: { ammo: 1 },
+        outcomes: [{ chance: 1, text: 'Hand-shaded hotspot margins, worth ten times the round. A medkit sweetens the deal — “hazard pay,” they say.', effects: { trade: true, medkits: 1, score: 12 } }],
+      },
+      {
+        label: 'Keep your geography to yourself',
+        outcomes: [{ chance: 1, text: 'They pencil you in anyway: “unidentified traveler, heading east, wrong about it.”', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 't-beekeeper',
+    kind: 'trader',
+    title: 'The beekeeper',
+    text: 'Netted hood, smoke can, and a hum you feel in your teeth. “Bees didn’t notice the apocalypse. Honey for trade — it never spoils, and it keeps wounds clean.”',
+    choices: [
+      {
+        label: 'Trade for medicinal honey',
+        cost: { ammo: 1 },
+        outcomes: [{ chance: 1, text: 'Two jars, wax-sealed. Field medicine that tastes like the world before.', effects: { trade: true, medkits: 2, score: 12 } }],
+      },
+      {
+        label: 'Help move a hive',
+        detail: 'Free. Bees, though.',
+        outcomes: [
+          { chance: 0.6, text: 'Slow hands, no sudden moves, one sting for luck. Payment in honey and respect.', effects: { trade: true, medkits: 1, score: 12, health: -2 } },
+          { chance: 0.4, text: 'The bees vote against you. Payment still honors the labor.', effects: { trade: true, medkits: 1, health: -7, score: 8 } },
+        ],
+      },
+      {
+        label: 'Admire from a distance',
+        outcomes: [{ chance: 1, text: '“Smart,” says the beekeeper, and goes back to the hum.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 't-radio',
+    kind: 'trader',
+    title: 'The last DJ',
+    text: 'A van bristling with antennas, solar panels lashed to the roof. “You’re live on Wasteland Radio — well, you could be. Give the listeners something and the station pays scale.”',
+    choices: [
+      {
+        label: 'Report road conditions on air',
+        outcomes: [
+          { chance: 0.75, text: 'Your traffic report reaches four survivors and a dog. The station pays in rounds and a jingle about you.', effects: { trade: true, ammo: 3, score: 12 } },
+          { chance: 0.25, text: 'Dead air nerves — you freeze on the mic. Kill fee: one round.', effects: { trade: true, ammo: 1, score: 4 } },
+        ],
+      },
+      {
+        label: 'Request a song instead',
+        detail: 'Free, worth it',
+        outcomes: [{ chance: 1, text: 'They play it. For three minutes the wasteland has a soundtrack, and the DJ slips you a kit “for a loyal listener.”', effects: { trade: true, medkits: 1, score: 10 } }],
+      },
+    ],
+  },
+  {
+    id: 't-toll-kids',
+    kind: 'trader',
+    title: 'The toll booth',
+    text: 'Two kids behind a barricade of shopping carts, one wearing a colander helmet. A sign in crayon: TOLL — 1 BULLET OR 1 STORY. A very serious spear made of broom.',
+    choices: [
+      {
+        label: 'Pay the bullet',
+        cost: { ammo: 1 },
+        outcomes: [{ chance: 1, text: 'They inspect it like customs officers, stamp your hand with mud, and reveal the toll includes safe-passage intel and a bandage roll.', effects: { trade: true, medkits: 1, score: 10 } }],
+      },
+      {
+        label: 'Pay the story',
+        detail: 'Free, must be good',
+        outcomes: [
+          { chance: 0.7, text: 'You give them the one about the trader’s bees. The colander kid pays you BACK a round for “best story this week.”', effects: { trade: true, ammo: 1, score: 12 } },
+          { chance: 0.3, text: 'Tough crowd. Passage granted “this once,” eyes narrowed.', effects: { trade: true, score: 6 } },
+        ],
+      },
+      {
+        label: 'Go around the booth',
+        outcomes: [
+          { chance: 0.7, text: 'The detour is long and the whole way you feel judged.', effects: {} },
+          { chance: 0.3, text: 'The detour crosses a bramble ditch. The toll was cheaper.', effects: { health: -6 } },
+        ],
+      },
+    ],
+  },
+  {
+    id: 't-glassblower',
+    kind: 'trader',
+    title: 'The glassblower',
+    text: 'A kiln built from a bank vault door, green-tinged bottles in rows. “Hotspot sand melts strange — makes glass that glows. I pay for anyone crazy enough to have walked near the zones.”',
+    choices: [
+      {
+        label: 'Describe the hotspots you’ve skirted',
+        outcomes: [
+          { chance: 0.7, text: 'Your descriptions of the pulse timing fascinate them. They trade a kit and rounds for the science.', effects: { trade: true, medkits: 1, ammo: 2, score: 12 } },
+          { chance: 0.3, text: '“Amateur observations.” Still worth a round.', effects: { trade: true, ammo: 1, score: 5 } },
+        ],
+      },
+      {
+        label: 'Buy a glow-glass vial',
+        cost: { ammo: 1 },
+        outcomes: [{ chance: 1, text: 'A vial that glows faintly green — useless, beautiful, and somehow worth it. They throw in a medkit for the good taste.', effects: { trade: true, medkits: 1, score: 10 } }],
+      },
+    ],
+  },
+  {
+    id: 't-still',
+    kind: 'trader',
+    title: 'The distiller',
+    text: 'Copper coils behind a curtain of drying herbs. “Antiseptic, fuel, or courage — same liquid, three prices. What ails you?”',
+    choices: [
+      {
+        label: 'Buy antiseptic',
+        cost: { ammo: 1 },
+        outcomes: [{ chance: 1, text: 'A bottle that could strip paint or save a limb. Field kit, effectively.', effects: { trade: true, medkits: 2, score: 10 } }],
+      },
+      {
+        label: 'Split wood for the still',
+        detail: 'Free, honest sweat',
+        outcomes: [
+          { chance: 0.7, text: 'An hour of splitting. Payment: a kit and a taste of the good batch.', effects: { trade: true, medkits: 1, health: 5, score: 10 } },
+          { chance: 0.3, text: 'The axe head flies off mid-swing. The distiller patches you, apologizing the whole time.', effects: { trade: true, health: -5, medkits: 1, score: 8 } },
+        ],
+      },
+      {
+        label: 'Stay dry',
+        outcomes: [{ chance: 1, text: '“More for the paying customers.” Fair.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 't-dogless',
+    kind: 'trader',
+    title: 'The dogless man',
+    text: 'He’s stapling hand-drawn LOST DOG posters to dead trees. The dog on the poster is drawn from memory, badly, with love. “Seen her? Brown. Good ears. Answers to Comet.”',
+    choices: [
+      {
+        label: 'Honestly say you haven’t',
+        outcomes: [{ chance: 1, text: 'He nods like he’s used to it and gives you a poster “in case.” Wrapped inside: a ration bar and a round. “Finder’s advance.”', effects: { trade: true, ammo: 1, health: 5, score: 8 } }],
+      },
+      {
+        label: 'Mention the tracks you crossed',
+        detail: 'You did see tracks',
+        outcomes: [
+          { chance: 0.6, text: 'His whole face changes. He gives you half his pack before running the direction you pointed.', effects: { trade: true, medkits: 1, ammo: 2, score: 14 } },
+          { chance: 0.4, text: 'You describe them; his face falls. “Coyote.” He pays for the honesty anyway.', effects: { trade: true, ammo: 1, score: 6 } },
+        ],
+      },
+      {
+        label: 'No time for lost dogs',
+        outcomes: [{ chance: 1, text: 'The posters flap behind you for half a mile.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 't-mechanic',
+    kind: 'trader',
+    title: 'The believer',
+    text: 'She’s under a rusted pickup that hasn’t run since the war, wrenching at something with religious focus. “She’ll turn over. Hand me the 3/8 and I’ll owe you.”',
+    choices: [
+      {
+        label: 'Hand her the 3/8',
+        detail: 'Free. It will not turn over.',
+        outcomes: [
+          { chance: 0.15, text: 'IT TURNS OVER. It runs for nine glorious seconds and dies forever. She weeps, laughs, and gives you half her tools’ worth in trade.', effects: { trade: true, ammo: 4, medkits: 1, score: 20 } },
+          { chance: 0.85, text: 'It does not turn over. She pays her debts anyway — believers do.', effects: { trade: true, ammo: 2, score: 10 } },
+        ],
+      },
+      {
+        label: 'Trade a round for spare parts',
+        cost: { ammo: 1 },
+        outcomes: [{ chance: 1, text: 'Hose clamps, wire, a mirror. And a first-aid tin from the glovebox.', effects: { trade: true, medkits: 1, score: 9 } }],
+      },
+      {
+        label: 'Leave her to the faith',
+        outcomes: [{ chance: 1, text: 'Behind you: the starter cranking, cranking, cranking.', effects: {} }],
+      },
+    ],
+  },
+  {
+    id: 't-pilgrim-return',
+    kind: 'trader',
+    requiresFlag: 'pilgrim-blessed',
+    title: 'The pilgrim’s order',
+    text: 'Three figures in parachute-silk robes flag you down. “You aided our walker on the road. The order of the pad repays its debts — and it repays them well.”',
+    choices: [
+      {
+        label: 'Accept the order’s gratitude',
+        outcomes: [{ chance: 1, text: 'They load you down: kits, rounds, and a silk strip for your arm — “so others of the order know you.”', effects: { trade: true, medkits: 2, ammo: 3, score: 20 } }],
+      },
+      {
+        label: 'Ask them to bless the road ahead instead',
+        outcomes: [{ chance: 1, text: 'They walk the next half-mile with you, chanting softly. Nothing attacks. Nothing would dare. They leave a kit in your pack anyway.', effects: { trade: true, medkits: 1, health: 10, score: 16 } }],
+      },
+    ],
+  },
+  {
+    id: 't-doctor-cache',
+    kind: 'trader',
+    requiresFlag: 'doctor-friend',
+    title: 'The doctor’s apprentice',
+    text: 'A teenager with a stethoscope and the circuit doctor’s brisk manners. “You’re the one from the doctor’s notes. Good sutures hold, I hear. We cache supplies for patients in standing — you’re in standing.”',
+    choices: [
+      {
+        label: 'Collect from the cache',
+        outcomes: [{ chance: 1, text: 'Buried behind a fence post, exactly where the map dot said: two kits and clean bandages.', effects: { trade: true, medkits: 2, score: 16 } }],
+      },
+      {
+        label: 'Donate your standing to the next patient',
+        detail: 'Someone needs it more',
+        outcomes: [{ chance: 1, text: 'The apprentice writes it down, visibly moved. They insist you take one kit anyway. The circuit remembers.', effects: { trade: true, medkits: 1, score: 22 } }],
+      },
+    ],
+  },
+  {
+    id: 't-warden-favor',
+    kind: 'trader',
+    requiresFlag: 'in-the-ledger',
+    title: 'Checkpoint courtesy',
+    text: 'Another binocular-and-ledger type, this one behind a proper gate. They flip pages, find your name. “Warden radioed ahead. Registered travelers get the good crate.”',
+    choices: [
+      {
+        label: 'Open the good crate',
+        outcomes: [{ chance: 1, text: 'The bureaucracy of the wasteland finally pays out: rounds, a kit, and a stamped travel chit.', effects: { trade: true, ammo: 4, medkits: 1, score: 18 } }],
+      },
+      {
+        label: 'Ask for intel instead of goods',
+        outcomes: [{ chance: 1, text: 'They mark safe camps and a hostile cluster on your map, and slip you a kit “off ledger.”', effects: { trade: true, medkits: 1, score: 16 } }],
+      },
+    ],
+  },
+
 ]
 
 /** @type {Record<string, Encounter>} */
 export const encounterById = Object.fromEntries(encounters.map((e) => [e.id, e]))
 
+/** Base pools exclude flag-gated encounters — those only appear as payoffs. */
 export const hostileEncounterIds = encounters
-  .filter((e) => e.kind === 'zombie')
+  .filter((e) => e.kind === 'zombie' && !e.requiresFlag)
   .map((e) => e.id)
 export const traderEncounterIds = encounters
-  .filter((e) => e.kind === 'trader')
+  .filter((e) => e.kind === 'trader' && !e.requiresFlag)
   .map((e) => e.id)
+
+/** Chained payoffs: drawn at trigger time once their flag is set. */
+export const chainedEncounters = encounters.filter((e) => e.requiresFlag)
 
 /** @param {string} id */
 export function getEncounterById(id) {
