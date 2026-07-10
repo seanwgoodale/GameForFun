@@ -1,9 +1,8 @@
 import {
   ENTITY_MIN_TILES_PER_DIR,
-  HOSTILE_EXTRA_MULT,
-  HOSTILE_ZOMBIE_RAD_MULT,
-  NEGATIVE_ENCOUNTER_MULT,
-  POSITIVE_PICKUP_COUNT_MULT,
+  GLOWER_FRACTION,
+  RUNNER_FRACTION,
+  SCREAMER_FRACTION,
   RADIATION_PULSE_GROW_MAX,
   RADIATION_PULSE_GROW_MIN,
   RADIATION_PULSE_REST_MAX,
@@ -25,6 +24,15 @@ import {
 function pickEncounterId(kind, rand) {
   const pool = kind === 'trader' ? traderEncounterIds : hostileEncounterIds
   return pool[Math.floor(rand() * pool.length)]
+}
+
+/** @returns {'shambler' | 'runner' | 'screamer' | 'glower'} */
+function pickArchetype(rand) {
+  const r = rand()
+  if (r < RUNNER_FRACTION) return 'runner'
+  if (r < RUNNER_FRACTION + SCREAMER_FRACTION) return 'screamer'
+  if (r < RUNNER_FRACTION + SCREAMER_FRACTION + GLOWER_FRACTION) return 'glower'
+  return 'shambler'
 }
 
 /** @param {number} seed */
@@ -614,55 +622,23 @@ export function generateLevel(params) {
     cols,
     rows,
     wallProbability = 0.035,
-    /** 80% fewer than two story tiles → one hostile total */
-    numZombies = 1,
-    numTraders = 0,
-    numRadiation = 6,
-    numHealthPickups: nhOverride,
-    numWeaponPickups: nwOverride,
+    // Direct counts — callers pass a DIFFICULTIES preset; defaults = survivor.
+    numZombies = 90,
+    numTraders = 6,
+    numRadiation = 46,
+    numHealthPickups = 60,
+    numWeaponPickups = 30,
     seed = (Date.now() ^ (Math.floor(Math.random() * 0xffffffff) >>> 0)) >>> 0,
   } = params
 
   const rand = mulberry32(seed >>> 0)
 
-  const effZombies = Math.max(
-    1,
-    Math.round(
-      numZombies *
-        NEGATIVE_ENCOUNTER_MULT *
-        HOSTILE_EXTRA_MULT *
-        HOSTILE_ZOMBIE_RAD_MULT *
-        3 *
-        0.85,
-    ),
-  )
-  const baseTraders = Math.round(
-    numTraders * NEGATIVE_ENCOUNTER_MULT * HOSTILE_EXTRA_MULT * 3,
-  )
-  const effTraders = Math.max(baseTraders === 0 ? 3 : 0, baseTraders * 3)
-  const effRadiation = Math.max(
-    1,
-    Math.round(
-      numRadiation * NEGATIVE_ENCOUNTER_MULT * HOSTILE_ZOMBIE_RAD_MULT * 0.85,
-    ),
-  )
+  const effZombies = Math.max(1, Math.round(numZombies))
+  const effTraders = Math.max(0, Math.round(numTraders))
+  const effRadiation = Math.max(1, Math.round(numRadiation))
 
   const interior = (cols - 2) * (rows - 2)
   const numHouses = Math.max(4, Math.min(14, Math.floor(interior / 500)))
-  const baseHealthPickups = Math.min(
-    72,
-    Math.max(24, Math.floor(interior / 5500)),
-  )
-  const baseWeaponPickups = Math.min(
-    48,
-    Math.max(12, Math.floor(interior / 8000)),
-  )
-  const numHealthPickups =
-    nhOverride ??
-    Math.max(1, Math.round(baseHealthPickups * POSITIVE_PICKUP_COUNT_MULT))
-  const numWeaponPickups =
-    nwOverride ??
-    Math.max(1, Math.round(baseWeaponPickups * POSITIVE_PICKUP_COUNT_MULT))
 
   const minReachLarge = Math.max(4000, Math.floor(interior * 0.062))
   const minReach =
@@ -808,6 +784,7 @@ export function generateLevel(params) {
       entities.push({
         id: `z-${seed}-${i}`,
         kind: 'zombie',
+        archetype: pickArchetype(rand),
         x: x + 0.5,
         y: y + 0.5,
         ...dir,
@@ -970,6 +947,7 @@ export function generateLevel(params) {
           entities.push({
             id: `trove-${useZombies ? 'z' : 't'}-${seed}-${g}`,
             kind: useZombies ? 'zombie' : 'trader',
+            ...(useZombies ? { archetype: pickArchetype(rand) } : {}),
             x: gx + 0.5,
             y: gy + 0.5,
             ...dir,
@@ -1046,6 +1024,8 @@ export function tickEntityPositions(
       .map((_, i) => i)
       .filter((i) => {
         if (next[i].defeated) return false
+        // Chasers are driven smoothly by the chase system, not the wander hop.
+        if (next[i].chasing) return false
         const k = next[i].kind
         return k === 'zombie' || k === 'trader'
       }),

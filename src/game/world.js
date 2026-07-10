@@ -1,6 +1,10 @@
 import {
+  DEFAULT_DIFFICULTY,
+  DIFFICULTIES,
   STARTING_HEALTH,
   STARTING_WEAPONS,
+  SUPPLY_DROP_DELAY_MAX_MS,
+  SUPPLY_DROP_DELAY_MIN_MS,
   VISION_RADIUS,
   WORLD_COLS,
   WORLD_ROWS,
@@ -85,7 +89,18 @@ export function createWorld() {
     pendingEffects: [],
     hostileApproach: new Map(),
     hazardHits: new Set(),
+    /** Glower aura: entity id -> last damage tick (ms) */
+    glowerHits: new Map(),
     lastZombieContact: 0,
+    difficulty: DEFAULT_DIFFICULTY,
+    /** Chase tuning from the difficulty preset */
+    tuning: {
+      chaseSpeed: DIFFICULTIES[DEFAULT_DIFFICULTY].chaseSpeed,
+      chaseRange: DIFFICULTIES[DEFAULT_DIFFICULTY].chaseRange,
+    },
+    seed: null,
+    /** Side objective: null | { state, spawnAt, x?, y?, expiresAt?, rewarded? } */
+    supplyDrop: null,
     lastMoveDir: { x: 0, y: 1 },
     wanderAccumMs: 0,
     lastVisionTile: null,
@@ -134,8 +149,25 @@ export function applyDamage(world, amount) {
  * Load a generated level into a fresh run. Assumes `world` is newly created.
  * @param {World} world
  * @param {ReturnType<import('./levelGen.js').generateLevel>} level
+ * @param {{ difficulty?: string; seed?: number | null }} [opts]
  */
-export function startRun(world, level) {
+export function startRun(world, level, opts = {}) {
+  const difficulty = DIFFICULTIES[opts.difficulty]
+    ? opts.difficulty
+    : DEFAULT_DIFFICULTY
+  world.difficulty = difficulty
+  world.tuning = {
+    chaseSpeed: DIFFICULTIES[difficulty].chaseSpeed,
+    chaseRange: DIFFICULTIES[difficulty].chaseRange,
+  }
+  world.seed = opts.seed ?? null
+  world.supplyDrop = {
+    state: 'pending',
+    spawnAt:
+      Date.now() +
+      SUPPLY_DROP_DELAY_MIN_MS +
+      Math.random() * (SUPPLY_DROP_DELAY_MAX_MS - SUPPLY_DROP_DELAY_MIN_MS),
+  }
   world.wallSet = level.wallSet
   world.pathSet =
     level.pathSet instanceof Set

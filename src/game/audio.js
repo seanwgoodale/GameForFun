@@ -149,6 +149,20 @@ class AudioSystem {
         this.tone({ from: 659, duration: 0.1, volume: 0.18, type: 'triangle', when: 0.09 })
         this.tone({ from: 784, duration: 0.16, volume: 0.18, type: 'triangle', when: 0.18 })
         break
+      case 'scream':
+        this.tone({ from: 950, to: 280, duration: 0.55, volume: 0.35, type: 'sawtooth' })
+        this.noise({ duration: 0.4, volume: 0.2, filterHz: 2500, type: 'highpass' })
+        break
+      case 'supply-drop':
+        this.noise({ duration: 0.5, volume: 0.25, filterHz: 900 })
+        this.tone({ from: 523, duration: 0.12, volume: 0.25, when: 0.3 })
+        this.tone({ from: 784, duration: 0.2, volume: 0.25, when: 0.44 })
+        break
+      case 'objective-complete':
+        this.tone({ from: 659, duration: 0.1, volume: 0.25 })
+        this.tone({ from: 880, duration: 0.1, volume: 0.25, when: 0.1 })
+        this.tone({ from: 1046, duration: 0.22, volume: 0.25, when: 0.2 })
+        break
       case 'trade':
         this.tone({ from: 440, duration: 0.08, volume: 0.2 })
         this.tone({ from: 554, duration: 0.08, volume: 0.2, when: 0.09 })

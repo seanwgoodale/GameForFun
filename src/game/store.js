@@ -1,5 +1,7 @@
 import { getEncounterById } from '../data/encounters.js'
 import {
+  DEFAULT_DIFFICULTY,
+  DIFFICULTIES,
   VIEWPORT_COLS,
   VIEWPORT_ROWS,
   WORLD_COLS,
@@ -78,10 +80,29 @@ export class GameStore {
     for (const listener of [...this.listeners]) listener()
   }
 
-  startGame() {
+  /**
+   * @param {{ difficulty?: string; seed?: number | null }} [options]
+   */
+  startGame({ difficulty = DEFAULT_DIFFICULTY, seed = null } = {}) {
     this.stopLoop()
+    const preset = DIFFICULTIES[difficulty] ?? DIFFICULTIES[DEFAULT_DIFFICULTY]
+    const usedSeed =
+      seed ?? (Date.now() ^ (Math.floor(Math.random() * 0xffffffff) >>> 0)) >>> 0
     this.world = createWorld()
-    startRun(this.world, generateLevel({ cols: WORLD_COLS, rows: WORLD_ROWS }))
+    startRun(
+      this.world,
+      generateLevel({
+        cols: WORLD_COLS,
+        rows: WORLD_ROWS,
+        seed: usedSeed,
+        numZombies: preset.zombies,
+        numTraders: preset.traders,
+        numRadiation: preset.radiation,
+        numHealthPickups: preset.healthPickups,
+        numWeaponPickups: preset.weaponPickups,
+      }),
+      { difficulty, seed: usedSeed },
+    )
     this.moveKeysRef.current.clear()
     this.touchAnalogRef.current.x = 0
     this.touchAnalogRef.current.y = 0
@@ -151,7 +172,8 @@ export class GameStore {
 
   loop(frameTime) {
     this.rafId = 0
-    const dtSec = Math.min(0.05, (frameTime - this.lastFrameTime) / 1000)
+    // After a background stretch (rAF suspended), resume without a dt jump.
+    const dtSec = Math.min(0.05, Math.max(0, frameTime - this.lastFrameTime) / 1000)
     this.lastFrameTime = frameTime
 
     const intent = readMoveIntent(
@@ -205,6 +227,9 @@ function buildSnapshot(world) {
     exitBlocked: world.exitBlocked,
     pendingEndScore: world.pendingEndScore,
     endReason: world.endReason,
+    difficulty: world.difficulty,
+    seed: world.seed,
+    supplyDrop: world.supplyDrop,
     exitCell: { ...world.exitCell },
     spawnCell: { ...world.spawnCell },
   }

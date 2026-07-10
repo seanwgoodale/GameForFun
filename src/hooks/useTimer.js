@@ -41,7 +41,12 @@ export function useTimer({ durationSec, autoStart = true, onComplete }) {
 
   useEffect(() => {
     if (!state.active || state.remaining <= 0) return
-    const id = window.setInterval(() => dispatch({ type: 'tick' }), 1000)
+    // Don't drain the round clock while the tab is hidden — the sim (rAF)
+    // freezes in background tabs, so the timer must freeze with it.
+    const id = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return
+      dispatch({ type: 'tick' })
+    }, 1000)
     return () => window.clearInterval(id)
   }, [state.active, state.remaining])
 

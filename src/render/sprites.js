@@ -333,12 +333,20 @@ export const DEFINITIONS = {
   ],
 }
 
+/** Palette swaps for zombie archetypes (skin tones tell the threat apart). */
+export const ARCHETYPE_PALETTES = {
+  runner: { G: '#b5764a', g: '#84492c' }, // rust-red, fast
+  screamer: { G: '#b9b3a4', g: '#847e70' }, // bone-pale
+  glower: { G: '#a7d94f', g: '#6f9d2c' }, // toxic bright
+}
+
 /**
  * @param {string[]} rows
  * @param {boolean} [flipX]
+ * @param {Record<string, string>} [paletteOverride]
  * @returns {HTMLCanvasElement}
  */
-function rasterize(rows, flipX = false) {
+function rasterize(rows, flipX = false, paletteOverride = null) {
   const canvas = document.createElement('canvas')
   canvas.width = SPRITE_PX
   canvas.height = SPRITE_PX
@@ -348,7 +356,7 @@ function rasterize(rows, flipX = false) {
     for (let x = 0; x < row.length; x++) {
       const ch = row[x]
       if (ch === '.') continue
-      ctx.fillStyle = PAL[ch]
+      ctx.fillStyle = paletteOverride?.[ch] ?? PAL[ch]
       ctx.fillRect(flipX ? SPRITE_PX - 1 - x : x, y, 1, 1)
     }
   }
@@ -356,7 +364,7 @@ function rasterize(rows, flipX = false) {
 }
 
 /**
- * Build every sprite (plus mirrored variants) once.
+ * Build every sprite (plus mirrored and archetype variants) once.
  * @returns {Record<string, HTMLCanvasElement>}
  */
 export function buildAtlas() {
@@ -371,5 +379,9 @@ export function buildAtlas() {
   atlas.playerNf = rasterize(DEFINITIONS.playerN, true)
   atlas.zombieF = rasterize(DEFINITIONS.zombie, true)
   atlas.traderF = rasterize(DEFINITIONS.trader, true)
+  for (const [arch, pal] of Object.entries(ARCHETYPE_PALETTES)) {
+    atlas[`zombie_${arch}`] = rasterize(DEFINITIONS.zombie, false, pal)
+    atlas[`zombie_${arch}F`] = rasterize(DEFINITIONS.zombie, true, pal)
+  }
   return atlas
 }

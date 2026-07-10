@@ -219,6 +219,13 @@ export function GameScreen({ onTimeUp, game }) {
           </p>
         </div>
       ) : null}
+      {game.supplyDrop?.state === 'active' ? (
+        <div className="pointer-events-none absolute inset-x-0 top-[8.5rem] flex justify-center px-4">
+          <p className="rounded-md border border-orange-400/30 bg-orange-950/60 px-3 py-1.5 text-center text-xs font-semibold tracking-wide text-orange-100 backdrop-blur-[3px]">
+            Supply flare spotted — check the MAP before it burns out
+          </p>
+        </div>
+      ) : null}
       {quotaMet && !game.exitBlocked && playing ? (
         <div className="pointer-events-none absolute inset-x-0 top-24 flex justify-center px-4">
           <p className="rounded-md border border-emerald-400/25 bg-emerald-950/60 px-3 py-1.5 text-center text-xs font-semibold tracking-wide text-emerald-100 backdrop-blur-[3px]">

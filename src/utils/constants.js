@@ -29,21 +29,86 @@ export const RADIATION_PULSE_SHRINK_MAX = 6000
 export const RADIATION_PULSE_REST_MIN = 3000
 export const RADIATION_PULSE_REST_MAX = 8000
 
-/** Multiply zombie & radiation counts after other tuning (×3) */
-export const HOSTILE_ZOMBIE_RAD_MULT = 3
-
 /** Full world size (procedural grid including border walls) */
 export const WORLD_COLS = 84
 export const WORLD_ROWS = 56
 
-/** Medkits + weapon pickups: multiply base counts by this (e.g. 2.5 = +150%) */
-export const POSITIVE_PICKUP_COUNT_MULT = 2.5
+/**
+ * Difficulty presets — the single source of run tuning. `survivor` matches the
+ * pre-difficulty balance (which the old multiplier chain worked out to).
+ * chaseSpeed is tiles/sec (player moves at 4.25); chaseRange in tiles.
+ */
+export const DIFFICULTIES = {
+  scout: {
+    label: 'Scout',
+    blurb: 'Fewer dead, richer scavenging',
+    zombies: 60,
+    traders: 8,
+    radiation: 30,
+    healthPickups: 75,
+    weaponPickups: 38,
+    chaseSpeed: 1.9,
+    chaseRange: 4.5,
+  },
+  survivor: {
+    label: 'Survivor',
+    blurb: 'The wasteland as intended',
+    zombies: 90,
+    traders: 6,
+    radiation: 46,
+    healthPickups: 60,
+    weaponPickups: 30,
+    chaseSpeed: 2.3,
+    chaseRange: 5.5,
+  },
+  nightmare: {
+    label: 'Nightmare',
+    blurb: 'More dead, faster, hungrier',
+    zombies: 120,
+    traders: 4,
+    radiation: 58,
+    healthPickups: 45,
+    weaponPickups: 24,
+    chaseSpeed: 2.7,
+    chaseRange: 6.5,
+  },
+}
+export const DEFAULT_DIFFICULTY = 'survivor'
 
-/** Zombies, traders, radiation hotspots: multiply base counts (+200% = ×3) */
-export const NEGATIVE_ENCOUNTER_MULT = 3
+/** Zombie archetype mix (fractions of the zombie count; rest are shamblers) */
+export const RUNNER_FRACTION = 0.15
+export const SCREAMER_FRACTION = 0.1
+export const GLOWER_FRACTION = 0.1
 
-/** Extra multiplier for zombie + trader counts only (+300% = ×4 on top of the above) */
-export const HOSTILE_EXTRA_MULT = 4
+/** Runners chase faster and from farther away (added to difficulty values) */
+export const RUNNER_SPEED_BONUS = 1.0
+export const RUNNER_RANGE_BONUS = 2.5
+
+/** Chase gives up this many tiles beyond the aggro range */
+export const CHASE_RESET_MARGIN = 3
+
+/** Chasers stop closing inside this distance (contact radius still hits) */
+export const CHASE_STANDOFF = 0.45
+
+/** Screamer: wakes zombies in radius into a timed chase, then cools down */
+export const SCREAM_RADIUS = 9
+export const SCREAM_CHASE_MS = 6000
+export const SCREAM_COOLDOWN_MS = 12000
+
+/** Glower: radiation aura — damage per tick, tick cooldown, radius (tiles) */
+export const GLOWER_AURA_RADIUS = 1.3
+export const GLOWER_AURA_DAMAGE = 6
+export const GLOWER_AURA_COOLDOWN_MS = 1500
+
+/** Supply drop side objective: spawn window after start, lifetime, contents */
+export const SUPPLY_DROP_DELAY_MIN_MS = 60000
+export const SUPPLY_DROP_DELAY_MAX_MS = 120000
+export const SUPPLY_DROP_DURATION_MS = 90000
+export const SUPPLY_DROP_SCORE = 25
+export const SUPPLY_DROP_MIN_DIST = 12
+export const SUPPLY_DROP_MAX_DIST = 40
+export const SUPPLY_DROP_MEDKITS = 2
+export const SUPPLY_DROP_AMMO = 3
 
 /** Vitals per second while standing on a rest-house tile */
 export const HOUSE_HEAL_PER_SEC = 11
@@ -125,6 +190,7 @@ export const ZOMBIE_CONTACT_COOLDOWN_MS = 1200
 
 export const STORAGE_KEYS = {
   highScore: '1mo-high-score',
+  difficulty: 'we-difficulty',
 }
 
 export const LEADERBOARD_NAME_MAX_LENGTH = 13

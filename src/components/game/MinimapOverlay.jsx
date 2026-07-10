@@ -35,6 +35,15 @@ export function MinimapOverlay({ open, onClose, game }) {
         ctx.fillStyle = '#ffd166'
         ctx.fillRect(exitCell.x * SCALE - 2, exitCell.y * SCALE - 2, SCALE + 4, SCALE + 4)
       }
+      // Active supply drop: orange flare marker, visible through fog.
+      if (game.supplyDrop?.state === 'active') {
+        const { x: dx, y: dy } = game.supplyDrop
+        const blink = Math.sin(performance.now() / 150) > 0
+        ctx.fillStyle = blink ? '#ffa03c' : '#ff6a2b'
+        ctx.beginPath()
+        ctx.arc(dx * SCALE + SCALE / 2, dy * SCALE + SCALE / 2, SCALE + 2, 0, Math.PI * 2)
+        ctx.fill()
+      }
       ctx.fillStyle = '#8a8a94'
       ctx.fillRect(spawnCell.x * SCALE, spawnCell.y * SCALE, SCALE, SCALE)
       // Player dot pulses so it's findable at a glance.

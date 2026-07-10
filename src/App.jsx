@@ -4,7 +4,12 @@ import { GameScreen } from './components/screens/GameScreen.jsx'
 import { HomeScreen } from './components/screens/HomeScreen.jsx'
 import { useGame } from './hooks/useGame.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
-import { LEADERBOARD_NAME_MAX_LENGTH, STORAGE_KEYS } from './utils/constants.js'
+import {
+  DEFAULT_DIFFICULTY,
+  DIFFICULTIES,
+  LEADERBOARD_NAME_MAX_LENGTH,
+  STORAGE_KEYS,
+} from './utils/constants.js'
 
 const defaultLeaderboard = { score: 0, name: '' }
 
@@ -16,6 +21,13 @@ export default function App() {
   const [isNewRecord, setIsNewRecord] = useState(false)
 
   const game = useGame()
+  const [difficulty, setDifficulty] = useLocalStorage(
+    STORAGE_KEYS.difficulty,
+    DEFAULT_DIFFICULTY,
+  )
+  const safeDifficulty = DIFFICULTIES[difficulty]
+    ? difficulty
+    : DEFAULT_DIFFICULTY
   const [stored, setStored] = useLocalStorage(
     STORAGE_KEYS.highScore,
     defaultLeaderboard,
@@ -28,7 +40,7 @@ export default function App() {
   }, [stored])
 
   const handleStart = () => {
-    game.startGame()
+    game.startGame({ difficulty: safeDifficulty })
     setRunKey((k) => k + 1)
     setScreen('game')
   }
@@ -56,7 +68,7 @@ export default function App() {
   )
 
   const handlePlayAgain = () => {
-    game.startGame()
+    game.startGame({ difficulty: safeDifficulty })
     setRunKey((k) => k + 1)
     setScreen('game')
   }
@@ -69,7 +81,12 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-slate-950">
       {screen === 'home' ? (
-        <HomeScreen onStart={handleStart} leaderboard={leaderboard} />
+        <HomeScreen
+          onStart={handleStart}
+          leaderboard={leaderboard}
+          difficulty={safeDifficulty}
+          onSelectDifficulty={setDifficulty}
+        />
       ) : null}
       {screen === 'game' ? (
         <GameScreen

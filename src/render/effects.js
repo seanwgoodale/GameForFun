@@ -91,6 +91,19 @@ export function applyEvent(fx, ev, player) {
         gravity: -2,
       })
       break
+    case 'scream':
+      burst(fx, ev.x, ev.y, { count: 22, color: '#e8e4da', speed: 6, ttl: 0.5 })
+      floater(fx, ev.x, ev.y - 0.7, 'SCREEEE', '#e8e4da', 1.1)
+      fx.shake = Math.max(fx.shake, 0.3)
+      break
+    case 'supply-drop':
+      burst(fx, ev.x + 0.5, ev.y + 0.5, { count: 26, color: '#ffa03c', speed: 4.5, ttl: 0.9, gravity: -3 })
+      floater(fx, ev.x + 0.5, ev.y - 0.4, 'SUPPLY FLARE', '#ffc37a', 1.4)
+      break
+    case 'objective-complete':
+      floater(fx, player.x, player.y - 0.8, `+${ev.score} SUPPLIES SECURED`, '#ffd166', 1.3)
+      burst(fx, player.x, player.y, { count: 14, color: '#ffd166', speed: 3, ttl: 0.6, gravity: -2 })
+      break
     case 'death':
       setFlash(fx, '#5e0f0f', 0.55)
       fx.shake = Math.max(fx.shake, 0.8)

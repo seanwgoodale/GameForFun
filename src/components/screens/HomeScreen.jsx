@@ -1,7 +1,14 @@
+import { DIFFICULTIES } from '../../utils/constants.js'
+
 /**
- * @param {{ onStart: () => void; leaderboard: { score: number; name: string } }} props
+ * @param {{
+ *   onStart: () => void
+ *   leaderboard: { score: number; name: string }
+ *   difficulty: string
+ *   onSelectDifficulty: (key: string) => void
+ * }} props
  */
-export function HomeScreen({ onStart, leaderboard }) {
+export function HomeScreen({ onStart, leaderboard, difficulty, onSelectDifficulty }) {
   const { score, name } = leaderboard ?? { score: 0, name: '' }
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#0c0a08] px-4 py-10">
@@ -50,6 +57,33 @@ export function HomeScreen({ onStart, leaderboard }) {
               <p>10:00 on the clock</p>
               <p>10 hostiles to drop</p>
               <p>1 way out</p>
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <p className="text-[9px] font-bold tracking-[0.22em] text-amber-200/45">
+              THREAT LEVEL
+            </p>
+            <div className="mt-2 grid grid-cols-3 gap-1.5">
+              {Object.entries(DIFFICULTIES).map(([key, d]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => onSelectDifficulty(key)}
+                  className={`rounded-md border px-2 py-2 text-center transition ${
+                    difficulty === key
+                      ? 'border-amber-400/60 bg-amber-800/40 text-amber-50'
+                      : 'border-amber-100/10 bg-black/30 text-amber-200/50 hover:border-amber-200/30'
+                  }`}
+                >
+                  <span className="block text-[11px] font-bold tracking-wider">
+                    {d.label}
+                  </span>
+                  <span className="mt-0.5 block text-[9px] leading-tight opacity-70">
+                    {d.blurb}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 

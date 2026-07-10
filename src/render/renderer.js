@@ -234,6 +234,32 @@ export class GameRenderer {
       ctx.stroke()
     }
 
+    // Supply drop flare: visible through fog — that's the point of a flare.
+    const drop = world.supplyDrop
+    if (drop?.state === 'active') {
+      const cx = drop.x + 0.5
+      const cy = drop.y + 0.5
+      if (inView(cx, cy, 6)) {
+        const s = toScreen(cx, cy)
+        const phase = (t / 700) % 1
+        ctx.strokeStyle = `rgba(255,160,60,${0.65 * (1 - phase)})`
+        ctx.lineWidth = 2.5
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, (0.25 + phase * 1.4) * px, 0, Math.PI * 2)
+        ctx.stroke()
+        // Light column
+        const beam = ctx.createLinearGradient(s.x, s.y - px * 5, s.x, s.y)
+        beam.addColorStop(0, 'rgba(255,160,60,0)')
+        beam.addColorStop(1, 'rgba(255,160,60,0.35)')
+        ctx.fillStyle = beam
+        ctx.fillRect(s.x - px * 0.12, s.y - px * 5, px * 0.24, px * 5)
+        ctx.fillStyle = `rgba(255,220,140,${0.6 + 0.4 * Math.sin(t / 90)})`
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, px * 0.1, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
     // Helipad beacon when discovered.
     if (world.revealed.has(cellKey(world.exitCell.x, world.exitCell.y))) {
       const s = toScreen(world.exitCell.x + 0.5, world.exitCell.y + 0.5)
@@ -288,12 +314,28 @@ export class GameRenderer {
         draw: () => {
           const s = toScreen(rx, ry)
           if (e.kind === 'zombie' || e.kind === 'trader') {
-            const phase = (t / 480 + (e.id.charCodeAt(2) % 7)) | 0
+            // Chasers animate twice as fast — reads as urgency.
+            const cadence = e.chasing ? 240 : 480
+            const phase = (t / cadence + (e.id.charCodeAt(2) % 7)) | 0
             const flip = phase % 2 === 1
-            const bob = Math.sin(t / 240 + e.id.length) * px * 0.03
+            const bob = Math.sin(t / (e.chasing ? 120 : 240) + e.id.length) * px * 0.03
             let sprite
-            if (e.kind === 'zombie') sprite = flip ? this.atlas.zombieF : this.atlas.zombie
-            else sprite = flip ? this.atlas.traderF : this.atlas.trader
+            if (e.kind === 'zombie') {
+              const arch = e.archetype && e.archetype !== 'shambler' ? e.archetype : null
+              const base = arch ? `zombie_${arch}` : 'zombie'
+              sprite = this.atlas[flip ? `${base}F` : base] ?? this.atlas.zombie
+            } else {
+              sprite = flip ? this.atlas.traderF : this.atlas.trader
+            }
+            if (e.kind === 'zombie' && e.archetype === 'glower') {
+              const glow = ctx.createRadialGradient(s.x, s.y - px * 0.3, 0, s.x, s.y - px * 0.3, px * 1.1)
+              glow.addColorStop(0, 'rgba(167,217,79,0.28)')
+              glow.addColorStop(1, 'rgba(167,217,79,0)')
+              ctx.fillStyle = glow
+              ctx.beginPath()
+              ctx.arc(s.x, s.y - px * 0.3, px * 1.1, 0, Math.PI * 2)
+              ctx.fill()
+            }
             this.drawShadow(s.x, s.y, px)
             ctx.drawImage(sprite, s.x - px / 2, s.y - px * 0.82 + bob, px, px)
             if (e.kind === 'trader') {
