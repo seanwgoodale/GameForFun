@@ -4,6 +4,7 @@ import {
   VISION_RADIUS,
 } from '../utils/constants.js'
 import { cellKey, getRadiationPulseRadius } from '../utils/helpers.js'
+import { prefersReducedMotion } from '../utils/motion.js'
 import { applyEvent, createEffects, stepEffects } from './effects.js'
 import { buildAtlas, SPRITE_PX } from './sprites.js'
 
@@ -215,7 +216,8 @@ export class GameRenderer {
 
     let camX = this.cam.x
     let camY = this.cam.y
-    if (this.fx.shake > 0.001) {
+    const reducedMotion = prefersReducedMotion()
+    if (this.fx.shake > 0.001 && !reducedMotion) {
       const mag = this.fx.shake * 0.12
       camX += (Math.random() - 0.5) * mag
       camY += (Math.random() - 0.5) * mag
@@ -615,7 +617,10 @@ export class GameRenderer {
 
     if (this.fx.flash.alpha > 0.004) {
       ctx.fillStyle = this.fx.flash.color
-      ctx.globalAlpha = this.fx.flash.alpha
+      // Reduced motion: flashes stay informative but far gentler.
+      ctx.globalAlpha = prefersReducedMotion()
+        ? this.fx.flash.alpha * 0.4
+        : this.fx.flash.alpha
       ctx.fillRect(0, 0, this.cssW, this.cssH)
       ctx.globalAlpha = 1
     }

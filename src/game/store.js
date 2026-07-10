@@ -8,6 +8,7 @@ import {
   WORLD_ROWS,
   ZOMBIES_TO_ELIMINATE,
 } from '../utils/constants.js'
+import { prefersReducedMotion } from '../utils/motion.js'
 import * as actions from './actions.js'
 import { readMoveIntent } from './input.js'
 import { generateLevel } from './levelGen.js'
@@ -38,10 +39,12 @@ export class GameStore {
     /** Hit-stop: sim time dips briefly on kills for punch. */
     this.slowUntil = 0
     this.eventListeners.add((events) => {
-      if (events.some((e) => e.type === 'kill')) {
+      if (events.some((e) => e.type === 'kill') && !prefersReducedMotion()) {
         this.slowUntil = performance.now() + 90
       }
     })
+    /** Gamepad edge-detection state. */
+    this.gpPrev = { fire: false, med: false, map: false }
     this.loop = this.loop.bind(this)
     this.subscribe = this.subscribe.bind(this)
     this.getSnapshot = this.getSnapshot.bind(this)
@@ -165,6 +168,29 @@ export class GameStore {
     this.commit()
   }
 
+  /**
+   * Standard-mapping gamepad: left stick moves, A/RT fires, X/B medkit.
+   * Returns a move intent or null. Buttons fire actions on press edges.
+   */
+  pollGamepad() {
+    const pads = navigator.getGamepads?.()
+    const gp = pads && [...pads].find((g) => g && g.connected)
+    if (!gp) return null
+
+    const fire = Boolean(gp.buttons[0]?.pressed || gp.buttons[7]?.pressed)
+    const med = Boolean(gp.buttons[1]?.pressed || gp.buttons[2]?.pressed)
+    if (fire && !this.gpPrev.fire) this.fireRangedWeapon()
+    if (med && !this.gpPrev.med) this.useHealthPack()
+    this.gpPrev.fire = fire
+    this.gpPrev.med = med
+
+    const dead = 0.22
+    const x = Math.abs(gp.axes[0] ?? 0) > dead ? gp.axes[0] : 0
+    const y = Math.abs(gp.axes[1] ?? 0) > dead ? gp.axes[1] : 0
+    if (x === 0 && y === 0) return null
+    return { x, y }
+  }
+
   startLoop() {
     if (this.rafId) return
     this.lastFrameTime = performance.now()
@@ -184,10 +210,13 @@ export class GameStore {
     this.lastFrameTime = frameTime
     if (performance.now() < this.slowUntil) dtSec *= 0.3
 
-    const intent = readMoveIntent(
+    let intent = readMoveIntent(
       this.moveKeysRef.current,
       this.touchAnalogRef.current,
     )
+    const padIntent = this.pollGamepad()
+    if (intent.x === 0 && intent.y === 0 && padIntent) intent = padIntent
+
     updateWorld(this.world, dtSec, Date.now(), intent)
     this.commit()
 

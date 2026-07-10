@@ -9,14 +9,21 @@ clock runs out.
 
 ## Gameplay
 
-- Procedurally generated 84×56 tile world with fog of war — every run is a new map
+- Procedurally generated 84×56 tile world with fog of war and four biomes
+  (scrub, ashfall, salt flat, overgrowth) — every run is a new map, and
+  `?seed=anything` or the Daily Run deals the same one on purpose
 - Custom Canvas 2D renderer with hand-authored pixel-art sprites, particles,
-  screen shake, and synthesized WebAudio sound (geiger clicks, heartbeat, wind)
-- Smooth 360° movement (WASD / arrows on desktop; joystick + FIRE/MED buttons on touch)
-- Diegetic encounters: 25 authored situations with risk/reward choices —
-  spend ammo for certainty, gamble bare-handed, barter with survivors, or walk away
-- Roaming zombies and traders, pulsing radiation hotspots, scavengeable medkits
-  and ammo, rest houses that restore vitals
+  corpse decals, screen shake, and synthesized WebAudio sound (geiger clicks,
+  heartbeat, footsteps, an ambient drone — zero audio files)
+- Zombies hunt: chase AI plus archetypes — rust-red runners, bone-pale
+  screamers that wake the horde, glowing ones that leak radiation
+- Diegetic encounters: 49 authored situations with risk/reward choices and
+  chained payoffs — help the pilgrim early and their order repays you later
+- Three difficulty presets, a supply-drop side objective marked by a flare,
+  and a local top-10 leaderboard
+- Controls: WASD/arrows + Space/H on desktop, joystick + FIRE/MED thumb
+  buttons on touch, or a standard gamepad (left stick, A fires, B/X heals)
+- Installable PWA with offline support; respects `prefers-reduced-motion`
 - Eliminate 10 hostiles to unlock extraction at the helipad before the clock dies
 
 ### Controls

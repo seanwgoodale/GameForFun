@@ -44,6 +44,25 @@ FIRE/MED, per-element pointer capture) appears for coarse pointers/touch devices
 `?touch` query forces it for desktop debugging. Safe-area insets via
 `env(safe-area-inset-*)`, `viewport-fit=cover`, pinch/overscroll disabled.
 
+Later additions worth knowing:
+
+- Difficulty presets live in `DIFFICULTIES` (constants.js) — counts, pickup
+  economy, chase tuning. `survivor` is the balance baseline.
+- Chase AI + archetypes (runner/screamer/glower) in `systems.js`; chasers are
+  skipped by the wander hop and driven smoothly via the shared collision step.
+- Encounters can set `flag` effects; `requiresFlag` encounters are draw-time
+  payoffs (see `chooseEncounterId`). Base pools exclude gated ones. Tests
+  enforce every flag has a payoff and vice versa.
+- Seeds: `?seed=` (string hashes via `hashSeed`), Daily Run = date hash.
+  Biome is derived from the seed in levelGen.
+- Leaderboard: top-10 in localStorage (`utils/leaderboard.js`), migrates the
+  two legacy formats.
+- PWA: `public/` holds manifest, sw.js (network-first navigations,
+  cache-first assets), and icons GENERATED from the player sprite — edit art,
+  then `node scripts/generate-icons.mjs`; never hand-edit the PNGs.
+- Gamepad polled in the store loop; hit-stop/shake/flash all gate on
+  `prefers-reduced-motion`. Round timer pauses while the tab is hidden.
+
 Coordinates: world is a tile grid, positions are floats in tile units (tile center =
 `+0.5`); `wallSet`/`revealed`/`pathSet` are `Set<string>` keyed by `cellKey(x, y)` →
 `"x,y"`.
