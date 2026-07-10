@@ -1,0 +1,10 @@
+# Serve the Vite app at https://<site>/project/game/ (matches vite.config.js base).
+[build]
+  command = "npm run build && rm -rf deploy && mkdir -p deploy/project/game && cp -r dist/. deploy/project/game/"
+  publish = "deploy"
+
+# Without a trailing slash, relative asset URLs in index.html resolve incorrectly.
+[[redirects]]
+  from = "/project/game"
+  to = "/project/game/"
+  status = 301

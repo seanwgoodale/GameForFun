@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+/* Limit scanning to app source only — avoids huge dirs (node_modules, dist) and
+   speeds up / unsticks builds on slow or synced volumes (e.g. iCloud Drive). */
+@source not "../node_modules";
+@source not "../dist";
+@source not "../deploy";
+@source "./**/*.{js,jsx,ts,tsx,css}";
+@source "../index.html";
+
+@import './styles/animations.css';
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply m-0 min-h-dvh antialiased;
+    @apply bg-slate-950 text-slate-100;
+  }
+
+  #root {
+    @apply min-h-dvh;
+  }
+}

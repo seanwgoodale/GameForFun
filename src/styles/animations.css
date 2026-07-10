@@ -1,0 +1,305 @@
+/* Shared keyframes and utility classes for motion — extend as the game grows */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.35s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out both;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 1.5s ease-in-out infinite;
+}
+
+@keyframes radiation-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  35% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  65% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+}
+
+.radiation-pulse {
+  animation: radiation-pulse 12s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Minimap “live location” — pulsing core + expanding rings */
+@keyframes minimap-ring-out {
+  0% {
+    transform: scale(0.45);
+    opacity: 0.92;
+  }
+  55% {
+    opacity: 0.28;
+  }
+  100% {
+    transform: scale(2.85);
+    opacity: 0;
+  }
+}
+
+@keyframes minimap-core-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.14);
+    filter: brightness(1.12);
+  }
+}
+
+.minimap-player-pulse-wrap {
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+}
+
+.minimap-loc-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 9999px;
+  border: 2px solid rgba(250, 204, 21, 0.72);
+  box-shadow: 0 0 6px rgba(250, 204, 21, 0.45);
+  animation: minimap-ring-out 2.35s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  pointer-events: none;
+}
+
+.minimap-loc-ring--d1 {
+  animation-delay: 0.78s;
+}
+
+.minimap-loc-ring--d2 {
+  animation-delay: 1.56s;
+}
+
+.minimap-loc-core {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 9999px;
+  background: #facc15;
+  border: 1.5px solid rgba(254, 243, 199, 0.95);
+  box-shadow:
+    0 0 10px #facc15,
+    0 0 20px rgba(250, 204, 21, 0.65),
+    0 0 32px rgba(250, 204, 21, 0.35);
+  animation: minimap-core-pulse 1.1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Main map — helipad beacon (green) once tile is revealed */
+@keyframes helipad-map-core-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.12);
+    filter: brightness(1.15);
+  }
+}
+
+.helipad-map-pulse-wrap {
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+}
+
+.helipad-map-loc-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 9999px;
+  border: 2px solid rgba(52, 211, 153, 0.82);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+  animation: minimap-ring-out 2.35s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  pointer-events: none;
+}
+
+.helipad-map-loc-ring--d1 {
+  animation-delay: 0.78s;
+}
+
+.helipad-map-loc-ring--d2 {
+  animation-delay: 1.56s;
+}
+
+.helipad-map-loc-core {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 9999px;
+  background: #34d399;
+  border: 1.5px solid rgba(167, 243, 208, 0.95);
+  box-shadow:
+    0 0 12px #34d399,
+    0 0 22px rgba(52, 211, 153, 0.55),
+    0 0 36px rgba(16, 185, 129, 0.35);
+  animation: helipad-map-core-pulse 1.1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Minimap — same beacon on revealed helipad */
+.helipad-minimap-pulse-wrap {
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+}
+
+.helipad-minimap-loc-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 9999px;
+  border: 2px solid rgba(52, 211, 153, 0.78);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.45);
+  animation: minimap-ring-out 2.35s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  pointer-events: none;
+}
+
+.helipad-minimap-loc-ring--d1 {
+  animation-delay: 0.78s;
+}
+
+.helipad-minimap-loc-ring--d2 {
+  animation-delay: 1.56s;
+}
+
+.helipad-minimap-loc-core {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 9999px;
+  background: #34d399;
+  border: 1.5px solid rgba(167, 243, 208, 0.95);
+  box-shadow:
+    0 0 10px #34d399,
+    0 0 18px rgba(52, 211, 153, 0.55);
+  animation: helipad-map-core-pulse 1.1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Player bullet — black ball travels 4 tiles in direction, then fades */
+@keyframes projectile-fly {
+  0% {
+    left: var(--proj-start-x);
+    top: var(--proj-start-y);
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    left: var(--proj-end-x);
+    top: var(--proj-end-y);
+    opacity: 0;
+  }
+}
+
+.projectile-ball {
+  animation: projectile-fly 0.32s linear forwards;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* Hostile shot — red ball from hostile toward player */
+@keyframes hostile-shot-fly {
+  0% {
+    left: var(--hostile-start-x);
+    top: var(--hostile-start-y);
+    opacity: 1;
+  }
+  100% {
+    left: var(--hostile-end-x);
+    top: var(--hostile-end-y);
+    opacity: 0;
+  }
+}
+
+.hostile-shot-ball {
+  animation: hostile-shot-fly 0.22s linear forwards;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* Subtle scanlines over the field map */
+.crt-grid::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.14),
+    rgba(0, 0, 0, 0.14) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
