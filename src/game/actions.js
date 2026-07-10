@@ -14,7 +14,7 @@ import {
 } from '../utils/constants.js'
 import { cellKey } from '../utils/helpers.js'
 import { applyScoreDelta, pointsForAnswer } from './scoring.js'
-import { applyDamage, patchEntity, touch } from './world.js'
+import { applyDamage, patchEntity, pushEvent, touch } from './world.js'
 
 /** @param {import('./world.js').World} world */
 function currentEncounter(world) {
@@ -119,8 +119,17 @@ export function fireRangedWeapon(world, now) {
     dy /= len
   }
 
-  world.projectile = { dx, dy, expiresAt: now + PROJECTILE_FLIGHT_MS }
+  world.projectile = {
+    dx,
+    dy,
+    // Renderer-only: tracer origin + timing.
+    ox: world.player.x,
+    oy: world.player.y,
+    startAt: now,
+    expiresAt: now + PROJECTILE_FLIGHT_MS,
+  }
   world.weapons -= 1
+  pushEvent(world, { type: 'player-shot', x: world.player.x, y: world.player.y, dx, dy })
   touch(world)
 
   const { x: px, y: py } = world.player
@@ -155,5 +164,6 @@ export function useHealthPack(world) {
   if (!world.playing || world.healthPacks <= 0) return
   world.healthPacks -= 1
   world.health = Math.min(MAX_HEALTH, world.health + HEALTH_PICKUP_AMOUNT)
+  pushEvent(world, { type: 'heal', x: world.player.x, y: world.player.y })
   touch(world)
 }

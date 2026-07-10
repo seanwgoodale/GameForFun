@@ -29,7 +29,13 @@ import { getRadiationPulseRadius } from '../utils/helpers.js'
 import { expandVision } from './fogVision.js'
 import { tickEntityPositions } from './levelGen.js'
 import { distSq, distSqToTileCenter, stepSmoothPlayer } from './movement.js'
-import { applyDamage, entityCenter, patchEntity, touch } from './world.js'
+import {
+  applyDamage,
+  entityCenter,
+  patchEntity,
+  pushEvent,
+  touch,
+} from './world.js'
 
 const HOSTILE_AGGRO_SQ = HOSTILE_AGGRO_RANGE * HOSTILE_AGGRO_RANGE
 const HOSTILE_RESET_SQ = HOSTILE_RESET_RANGE * HOSTILE_RESET_RANGE
@@ -78,12 +84,17 @@ function processPendingEffects(world, now) {
     if (fx.type === 'hostile-shot-damage') {
       applyDamage(world, fx.amount)
     } else if (fx.type === 'ranged-hit') {
+      const target = world.entities.find((e) => e.id === fx.targetId)
       if (fx.targetKind === 'zombie') {
         world.zombiesKilled += 1
         world.score += fx.score ?? 0
         patchEntity(world, fx.targetId, { defeated: true })
+        if (target)
+          pushEvent(world, { type: 'kill', x: target.x, y: target.y })
       } else {
         patchEntity(world, fx.targetId, { angryUntil: now + fx.angryMs })
+        if (target)
+          pushEvent(world, { type: 'anger', x: target.x, y: target.y })
       }
     }
   }
@@ -153,6 +164,7 @@ function checkExit(world) {
       world.score += GOAL_BONUS
       world.playing = false
       world.pendingEndScore = world.score
+      pushEvent(world, { type: 'extract' })
       touch(world)
     } else if (!world.exitBlocked) {
       world.exitBlocked = true
@@ -215,8 +227,15 @@ function fireHostileShot(world, e, now) {
   world.hostileProjectile = {
     ex: Math.floor(e.x),
     ey: Math.floor(e.y),
+    // Renderer-only: interpolate the tracer toward where the player was.
+    sx: e.x,
+    sy: e.y,
+    tx: world.player.x,
+    ty: world.player.y,
+    startAt: now,
     expiresAt: at,
   }
+  pushEvent(world, { type: 'hostile-shot', x: e.x, y: e.y })
   world.pendingEffects.push({
     at,
     type: 'hostile-shot-damage',
@@ -244,6 +263,7 @@ function triggerEncounter(world, now) {
       world.weaponFeedback = null
       world.encounterId = e.id
       world.encounterStep = 'question'
+      pushEvent(world, { type: 'encounter-open', kind: e.kind })
       touch(world)
       break
     }
@@ -304,6 +324,13 @@ function collectPickups(world) {
   world.entities = world.entities.map((e) =>
     picked.has(e.id) ? { ...e, defeated: true } : e,
   )
+  pushEvent(world, {
+    type: 'pickup',
+    x: world.player.x,
+    y: world.player.y,
+    health: healAmt > 0,
+    weapon: weaponAmt > 0,
+  })
   if (healAmt > 0) {
     if (world.health < MAX_HEALTH * HEALTH_PACK_AUTO_USE_THRESHOLD) {
       world.health = Math.min(MAX_HEALTH, world.health + healAmt)

@@ -24,6 +24,8 @@ export class GameStore {
   constructor() {
     this.world = createWorld()
     this.listeners = new Set()
+    /** Effect/audio consumers of transient world events. */
+    this.eventListeners = new Set()
     /** Ref-shaped so existing hooks/components can share them. */
     this.moveKeysRef = { current: new Set() }
     this.touchAnalogRef = { current: { x: 0, y: 0 } }
@@ -50,6 +52,12 @@ export class GameStore {
     return () => this.listeners.delete(listener)
   }
 
+  /** Subscribe to drained world events: `listener(eventsArray)`. */
+  onEvents(listener) {
+    this.eventListeners.add(listener)
+    return () => this.eventListeners.delete(listener)
+  }
+
   getSnapshot() {
     if (!this.snapshot || this.world.version !== this.snapshotVersion) {
       this.snapshot = buildSnapshot(this.world)
@@ -60,6 +68,11 @@ export class GameStore {
 
   /** Publish after mutations: bump version once and wake subscribers. */
   commit() {
+    if (this.world.events.length > 0) {
+      const events = this.world.events
+      this.world.events = []
+      for (const listener of [...this.eventListeners]) listener(events)
+    }
     if (!this.world.dirty) return
     this.world.dirty = false
     this.world.version += 1

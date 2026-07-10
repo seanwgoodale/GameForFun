@@ -1,8 +1,5 @@
 import { useMemo, useSyncExternalStore } from 'react'
-import { GameStore } from '../game/store.js'
-
-/** One store for the app; a new world is created per run inside it. */
-const store = new GameStore()
+import { store } from '../game/gameStore.js'
 
 if (import.meta.env.DEV && typeof window !== 'undefined') {
   // Dev-only handle for debugging / driving the sim from the console.

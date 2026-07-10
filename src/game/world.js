@@ -88,9 +88,21 @@ export function createWorld() {
     lastMoveDir: { x: 0, y: 1 },
     wanderAccumMs: 0,
     lastVisionTile: null,
+    events: [],
     version: 0,
     dirty: false,
   }
+}
+
+/**
+ * Queue a transient gameplay event (shot fired, hit landed, pickup, death…)
+ * for effects/audio consumers. Drained by the store on commit; carries no
+ * game-rule weight.
+ * @param {World} world
+ * @param {object} event `{ type, ... }`
+ */
+export function pushEvent(world, event) {
+  world.events.push(event)
 }
 
 /** Mark the world changed so the store publishes a new snapshot. */
@@ -107,9 +119,11 @@ export function touch(world) {
 export function applyDamage(world, amount) {
   if (amount <= 0) return
   world.health = Math.max(0, world.health - amount)
+  pushEvent(world, { type: 'damage', amount })
   if (world.health <= 0 && world.playing) {
     world.playing = false
     world.pendingEndScore = world.score
+    pushEvent(world, { type: 'death' })
   }
   touch(world)
 }

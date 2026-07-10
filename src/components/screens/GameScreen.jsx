@@ -1,10 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { EncounterModal } from '../game/EncounterModal.jsx'
-import { GameMap } from '../game/GameMap.jsx'
-import { Minimap } from '../game/Minimap.jsx'
-import { ProgressBar } from '../game/ProgressBar.jsx'
-import { ScoreDisplay } from '../game/ScoreDisplay.jsx'
-import { Timer } from '../game/Timer.jsx'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMapControls } from '../../hooks/useMapControls.js'
 import { useTimer } from '../../hooks/useTimer.js'
 import {
@@ -12,6 +6,15 @@ import {
   ROUND_DURATION_SEC,
   WEAPON_KILL_CHANCE_PERCENT,
 } from '../../utils/constants.js'
+import { formatTime } from '../../utils/helpers.js'
+import { CanvasMap } from '../game/CanvasMap.jsx'
+import { EncounterModal } from '../game/EncounterModal.jsx'
+import { MinimapOverlay } from '../game/MinimapOverlay.jsx'
+import { TouchControls } from '../game/TouchControls.jsx'
+
+const isCoarsePointer = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(pointer: coarse)').matches
 
 /** @param {{ onTimeUp: (finalScore: number) => void; game: object }} props */
 export function GameScreen({ onTimeUp, game }) {
@@ -20,19 +23,17 @@ export function GameScreen({ onTimeUp, game }) {
   const gameStopRef = useRef(game.stopGame)
   const clearPendingRef = useRef(game.clearPendingEnd)
   const endedRef = useRef(false)
+  const [touchUI] = useState(isCoarsePointer)
 
   useEffect(() => {
     scoreRef.current = game.score
   }, [game.score])
-
   useEffect(() => {
     onTimeUpRef.current = onTimeUp
   }, [onTimeUp])
-
   useEffect(() => {
     gameStopRef.current = game.stopGame
   }, [game.stopGame])
-
   useEffect(() => {
     clearPendingRef.current = game.clearPendingEnd
   }, [game.clearPendingEnd])
@@ -48,9 +49,7 @@ export function GameScreen({ onTimeUp, game }) {
   const { remaining } = useTimer({
     durationSec: ROUND_DURATION_SEC,
     autoStart: true,
-    onComplete: () => {
-      notifyEnd(scoreRef.current)
-    },
+    onComplete: () => notifyEnd(scoreRef.current),
   })
 
   useEffect(() => {
@@ -60,7 +59,6 @@ export function GameScreen({ onTimeUp, game }) {
 
   const movementEnabled = Boolean(game.playing && !game.encounterId)
   const [minimapOpen, setMinimapOpen] = useState(false)
-  /** Keyboard + thumb stick (disabled while minimap is open). */
   const mapInputEnabled = movementEnabled && !minimapOpen
 
   useMapControls(mapInputEnabled, game.moveKeysRef, game.touchAnalogRef)
@@ -112,103 +110,139 @@ export function GameScreen({ onTimeUp, game }) {
       : game.encounterEntity?.kind === 'zombie'
         ? 'Hostile'
         : 'Encounter'
-
   const hostileEncounter =
     game.encounterEntity?.kind === 'zombie' ||
     game.encounterEntity?.kind === 'trader'
 
-  return (
-    <div className="min-h-dvh bg-[#0a0908] px-4 py-6 text-amber-100/95">
-      <div className="mx-auto flex max-w-4xl flex-col gap-6 lg:flex-row lg:items-start">
-        <div className="flex-1 space-y-4">
-          <GameMap
-            worldCols={game.MAP_COLS}
-            worldRows={game.MAP_ROWS}
-            viewCols={game.VIEWPORT_COLS}
-            viewRows={game.VIEWPORT_ROWS}
-            wallSet={game.wallSet}
-            pathSet={game.pathSet}
-            revealed={game.revealed}
-            player={game.player}
-            entities={game.entities}
-            exitCell={game.exitCell}
-            spawnCell={game.spawnCell}
-            health={game.health}
-            ammo={game.weapons}
-            healthPacks={game.healthPacks}
-            projectile={game.projectile}
-            hostileProjectile={game.hostileProjectile}
-            movementEnabled={mapInputEnabled}
-            touchAnalogRef={game.touchAnalogRef}
-          />
-        </div>
+  const healthFrac = Math.max(0, Math.min(1, game.health / MAX_HEALTH))
+  const lowTime = remaining <= 60
+  const quotaMet = game.zombiesKilled >= game.zombiesToEliminate
 
-        <div className="w-full shrink-0 space-y-4 lg:max-w-xs">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <Timer
-              remainingSec={remaining}
-              label="Time left"
-              variant="vault"
-            />
-            <div className="rounded-xl border border-amber-900/50 bg-[#14110d] px-4 py-3">
-              <ScoreDisplay
-                score={game.score}
-                label="Score"
-                variant="vault"
+  const hudChip =
+    'pointer-events-auto rounded-md border border-amber-100/15 bg-black/45 px-2.5 py-1.5 backdrop-blur-[3px]'
+
+  const statLine = useMemo(
+    () => [
+      { label: 'AMMO', value: game.weapons, tone: 'text-amber-200' },
+      { label: 'MED', value: game.healthPacks, tone: 'text-emerald-300' },
+      {
+        label: 'KILLS',
+        value: `${game.zombiesKilled}/${game.zombiesToEliminate}`,
+        tone: quotaMet ? 'text-emerald-300' : 'text-amber-100',
+      },
+    ],
+    [game.weapons, game.healthPacks, game.zombiesKilled, game.zombiesToEliminate, quotaMet],
+  )
+
+  return (
+    <div className="relative h-dvh w-full select-none overflow-hidden bg-[#0c0a08] text-amber-50">
+      <CanvasMap />
+
+      {/* ── Top HUD ─────────────────────────────────────────────── */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        {/* Vitals + supplies */}
+        <div className="flex max-w-[46%] flex-col gap-1.5">
+          <div className={hudChip}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[9px] font-bold tracking-[0.18em] text-amber-200/60">
+                VITALS
+              </span>
+              <span className="font-mono text-[11px] text-amber-100/90">
+                {Math.round(game.health)}
+              </span>
+            </div>
+            <div className="mt-1 h-2 w-36 max-w-full overflow-hidden rounded-sm bg-black/60">
+              <div
+                className={`h-full transition-[width] duration-200 ${
+                  healthFrac < 0.3
+                    ? 'bg-red-500'
+                    : healthFrac < 0.6
+                      ? 'bg-amber-400'
+                      : 'bg-emerald-500'
+                }`}
+                style={{ width: `${healthFrac * 100}%` }}
               />
             </div>
           </div>
-          <div className="rounded-xl border border-amber-900/50 bg-[#14110d] px-4 py-3">
-            <ProgressBar
-              label="Vitals"
-              value={game.health}
-              max={MAX_HEALTH}
-            />
-            <p className="text-xs text-amber-200/50">
-              Sidearm charges:{' '}
-              <span className="font-mono text-amber-100">{game.weapons}</span>
-            </p>
+          <div className={`${hudChip} flex items-center gap-3`}>
+            {statLine.map((s) => (
+              <span key={s.label} className="flex items-baseline gap-1">
+                <span className="text-[9px] font-bold tracking-[0.14em] text-amber-200/50">
+                  {s.label}
+                </span>
+                <span className={`font-mono text-xs font-semibold ${s.tone}`}>
+                  {s.value}
+                </span>
+              </span>
+            ))}
           </div>
-          <p className="text-xs text-amber-200/50">
-            Zombies eliminated:{' '}
-            <span className="font-mono text-amber-100">
-              {game.zombiesKilled ?? 0}/{game.zombiesToEliminate ?? 10}
-            </span>{' '}
-            (need {game.zombiesToEliminate ?? 10} to extract)
-          </p>
-          <p className="text-xs text-amber-200/50">
-            Encounters cleared:{' '}
-            <span className="font-mono text-amber-100">
-              {game.encountersCleared}/{game.encounterTotal}
-            </span>
-          </p>
-          {game.exitBlocked ? (
-            <p className="rounded-lg border border-amber-700/60 bg-amber-950/30 px-3 py-2 text-sm text-amber-200/90">
-              Eliminate {game.zombiesToEliminate ?? 10} zombies to extract.
-            </p>
-          ) : null}
-          <p className="text-xs leading-relaxed text-amber-200/45">
-            Outdoor grid — M for minimap (yellow pulse = you). Light dirt trails
-            link camps, med drops, and the helipad. <strong>Space</strong> fires
-            ranged shot (4-tile range, uses last move direction). 🏠 restores
-            vitals. Scavenge + and ⚔. In encounters, Z/T: talk or shoot (
-            {WEAPON_KILL_CHANCE_PERCENT}% clear).
-          </p>
+        </div>
+
+        {/* Timer + score + buttons */}
+        <div className="flex flex-col items-end gap-1.5">
+          <div className={`${hudChip} text-right`}>
+            <div
+              className={`font-mono text-lg font-bold leading-none tracking-wide ${
+                lowTime ? 'animate-pulse text-red-400' : 'text-amber-100'
+              }`}
+            >
+              {formatTime(remaining)}
+            </div>
+            <div className="mt-0.5 text-[10px] font-semibold tracking-wider text-amber-200/70">
+              SCORE <span className="font-mono text-amber-100">{game.score}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMinimapOpen((o) => !o)}
+            className={`${hudChip} text-[10px] font-bold tracking-[0.14em] text-amber-200/80 active:bg-black/70`}
+          >
+            MAP
+          </button>
         </div>
       </div>
 
-      <Minimap
+      {/* ── Objective banner ────────────────────────────────────── */}
+      {game.exitBlocked ? (
+        <div className="pointer-events-none absolute inset-x-0 top-24 flex justify-center px-4">
+          <p className="rounded-md border border-red-400/30 bg-red-950/70 px-3 py-1.5 text-center text-xs font-semibold tracking-wide text-red-100 backdrop-blur-[3px]">
+            Extraction locked — eliminate{' '}
+            {game.zombiesToEliminate - game.zombiesKilled} more hostiles
+          </p>
+        </div>
+      ) : null}
+      {quotaMet && !game.exitBlocked && playing ? (
+        <div className="pointer-events-none absolute inset-x-0 top-24 flex justify-center px-4">
+          <p className="rounded-md border border-emerald-400/25 bg-emerald-950/60 px-3 py-1.5 text-center text-xs font-semibold tracking-wide text-emerald-100 backdrop-blur-[3px]">
+            Quota cleared — reach the helipad
+          </p>
+        </div>
+      ) : null}
+
+      {/* Desktop key hints */}
+      {!touchUI ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 hidden justify-center sm:flex">
+          <p className="rounded-md bg-black/40 px-3 py-1 text-[10px] tracking-wider text-amber-200/45 backdrop-blur-[2px]">
+            WASD move · SPACE fire · H medkit · M map
+          </p>
+        </div>
+      ) : null}
+
+      {touchUI ? (
+        <TouchControls
+          disabled={!mapInputEnabled}
+          analogRef={game.touchAnalogRef}
+          onFire={game.fireRangedWeapon}
+          onMed={game.useHealthPack}
+          medCount={game.healthPacks}
+          ammoCount={game.weapons}
+        />
+      ) : null}
+
+      <MinimapOverlay
         open={minimapOpen}
         onClose={() => setMinimapOpen(false)}
-        worldCols={game.MAP_COLS}
-        worldRows={game.MAP_ROWS}
-        wallSet={game.wallSet}
-        revealed={game.revealed}
-        player={game.player}
-        exitCell={game.exitCell}
-        spawnCell={game.spawnCell}
-        entities={game.entities}
-        pathSet={game.pathSet}
+        game={game}
       />
 
       <EncounterModal
