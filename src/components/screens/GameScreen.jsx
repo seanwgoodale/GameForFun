@@ -9,9 +9,16 @@ import { EncounterPanel } from '../game/EncounterPanel.jsx'
 import { MinimapOverlay } from '../game/MinimapOverlay.jsx'
 import { TouchControls } from '../game/TouchControls.jsx'
 
-const isCoarsePointer = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia?.('(pointer: coarse)').matches
+/** Touch UI when the primary pointer is coarse or the device has touch;
+ * `?touch` forces it on for desktop debugging. */
+const isTouchDevice = () => {
+  if (typeof window === 'undefined') return false
+  if (new URLSearchParams(window.location.search).has('touch')) return true
+  return (
+    window.matchMedia?.('(pointer: coarse)').matches ||
+    navigator.maxTouchPoints > 0
+  )
+}
 
 /** @param {{ onTimeUp: (finalScore: number) => void; game: object }} props */
 export function GameScreen({ onTimeUp, game }) {
@@ -20,7 +27,7 @@ export function GameScreen({ onTimeUp, game }) {
   const gameStopRef = useRef(game.stopGame)
   const clearPendingRef = useRef(game.clearPendingEnd)
   const endedRef = useRef(false)
-  const [touchUI] = useState(isCoarsePointer)
+  const [touchUI] = useState(isTouchDevice)
 
   useEffect(() => {
     scoreRef.current = game.score
