@@ -132,7 +132,11 @@ export function dismissEncounterResult(world, now = Date.now()) {
  * @param {number} now Date.now()
  */
 export function fireRangedWeapon(world, now) {
-  if (!world.playing || world.encounterId || world.weapons <= 0) return
+  if (!world.playing || world.encounterId) return
+  if (world.weapons <= 0) {
+    pushEvent(world, { type: 'dry-fire' })
+    return
+  }
 
   let { x: dx, y: dy } = world.lastMoveDir
   const len = Math.hypot(dx, dy)

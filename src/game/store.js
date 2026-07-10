@@ -35,6 +35,13 @@ export class GameStore {
     this.lastFrameTime = 0
     this.snapshot = null
     this.snapshotVersion = -1
+    /** Hit-stop: sim time dips briefly on kills for punch. */
+    this.slowUntil = 0
+    this.eventListeners.add((events) => {
+      if (events.some((e) => e.type === 'kill')) {
+        this.slowUntil = performance.now() + 90
+      }
+    })
     this.loop = this.loop.bind(this)
     this.subscribe = this.subscribe.bind(this)
     this.getSnapshot = this.getSnapshot.bind(this)
@@ -173,8 +180,9 @@ export class GameStore {
   loop(frameTime) {
     this.rafId = 0
     // After a background stretch (rAF suspended), resume without a dt jump.
-    const dtSec = Math.min(0.05, Math.max(0, frameTime - this.lastFrameTime) / 1000)
+    let dtSec = Math.min(0.05, Math.max(0, frameTime - this.lastFrameTime) / 1000)
     this.lastFrameTime = frameTime
+    if (performance.now() < this.slowUntil) dtSec *= 0.3
 
     const intent = readMoveIntent(
       this.moveKeysRef.current,

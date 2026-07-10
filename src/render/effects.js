@@ -10,9 +10,13 @@ export function createEffects() {
     particles: [],
     /** @type {{x:number,y:number,text:string,color:string,ttl:number,age:number}[]} */
     floaters: [],
+    /** Long-lived ground marks (corpse splats). @type {{x:number,y:number,seed:number,ttl:number,age:number}[]} */
+    decals: [],
     shake: 0,
     /** @type {{color:string,alpha:number}} */
     flash: { color: '#000', alpha: 0 },
+    /** Player hit tint window (performance.now ms). */
+    playerHitUntil: 0,
   }
 }
 
@@ -69,6 +73,7 @@ export function applyEvent(fx, ev, player) {
       burst(fx, ev.x, ev.y, { count: 16, color: '#7fa055', speed: 3.5, ttl: 0.6, gravity: 4 })
       burst(fx, ev.x, ev.y, { count: 8, color: '#b23a3a', speed: 2.5, ttl: 0.45, gravity: 5 })
       floater(fx, ev.x, ev.y - 0.4, 'DOWN', '#d9e8d0')
+      fx.decals.push({ x: ev.x, y: ev.y, seed: (ev.x * 31 + ev.y * 17) | 0, ttl: 45, age: 0 })
       break
     case 'anger':
       floater(fx, ev.x, ev.y - 0.4, '!!', '#ffd166')
@@ -77,6 +82,7 @@ export function applyEvent(fx, ev, player) {
       setFlash(fx, '#b23a3a', Math.min(0.4, 0.12 + ev.amount / 90))
       fx.shake = Math.max(fx.shake, Math.min(0.6, ev.amount / 40))
       floater(fx, player.x, player.y - 0.6, `-${Math.round(ev.amount)}`, '#ff7b6b')
+      fx.playerHitUntil = performance.now() + 160
       break
     case 'heal':
       setFlash(fx, '#3f9d5c', 0.14)
@@ -135,6 +141,8 @@ export function stepEffects(fx, dt) {
     f.y -= dt * 0.9
   }
   fx.floaters = fx.floaters.filter((f) => f.age < f.ttl)
+  for (const d of fx.decals) d.age += dt
+  fx.decals = fx.decals.filter((d) => d.age < d.ttl)
   fx.shake = Math.max(0, fx.shake - dt * 2.2)
   fx.flash.alpha = Math.max(0, fx.flash.alpha - dt * 1.6)
 }

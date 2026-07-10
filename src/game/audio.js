@@ -20,8 +20,13 @@ class AudioSystem {
       /* private mode */
     }
     this.windGain = null
+    this.musicGain = null
     this.lastGeiger = 0
     this.lastHeartbeat = 0
+    this.lastStep = 0
+    this.lastStepAt = 0
+    this.lastPlayerPos = null
+    this.stepParity = false
     this.pollId = 0
     this.store = null
     this.unsubEvents = null
@@ -59,6 +64,7 @@ class AudioSystem {
       const data = this.noiseBuf.getChannelData(0)
       for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1
       this.startWind()
+      this.startMusic()
     }
     if (this.ctx.state === 'suspended') this.ctx.resume()
   }
@@ -149,6 +155,10 @@ class AudioSystem {
         this.tone({ from: 659, duration: 0.1, volume: 0.18, type: 'triangle', when: 0.09 })
         this.tone({ from: 784, duration: 0.16, volume: 0.18, type: 'triangle', when: 0.18 })
         break
+      case 'dry-fire':
+        this.tone({ from: 900, to: 700, duration: 0.03, volume: 0.15 })
+        this.tone({ from: 500, to: 400, duration: 0.03, volume: 0.12, when: 0.05 })
+        break
       case 'scream':
         this.tone({ from: 950, to: 280, duration: 0.55, volume: 0.35, type: 'sawtooth' })
         this.noise({ duration: 0.4, volume: 0.2, filterHz: 2500, type: 'highpass' })
@@ -214,10 +224,69 @@ class AudioSystem {
       this.tone({ from: 50, to: 42, duration: 0.08, volume: 0.3, type: 'sine', when: 0.16 })
     }
 
+    // Footsteps: soft ticks keyed to actual distance covered.
+    const p = world.player
+    if (this.lastPlayerPos) {
+      const moved = Math.hypot(p.x - this.lastPlayerPos.x, p.y - this.lastPlayerPos.y)
+      this.lastStep += moved
+      if (this.lastStep > 0.65 && now - this.lastStepAt > 140) {
+        this.lastStep = 0
+        this.lastStepAt = now
+        this.stepParity = !this.stepParity
+        this.noise({
+          duration: 0.045,
+          volume: 0.09,
+          filterHz: this.stepParity ? 700 : 500,
+        })
+      }
+    }
+    this.lastPlayerPos = { x: p.x, y: p.y }
+
     if (this.windGain) {
       const target = world.playing ? 0.05 : 0
       this.windGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.6)
     }
+    if (this.musicGain) {
+      const target = world.playing ? 0.045 : 0
+      this.musicGain.gain.setTargetAtTime(target, this.ctx.currentTime, 1.2)
+    }
+  }
+
+  /** Sparse clock tick for the extraction countdown (called from the HUD). */
+  countdownTick(urgent = false) {
+    if (!this.ctx || this.muted) return
+    this.tone({ from: urgent ? 1320 : 880, duration: 0.05, volume: urgent ? 0.22 : 0.15 })
+  }
+
+  /**
+   * Ambient bed: two detuned lows and a slow fifth, breathing via LFO.
+   * Present without being music you'd notice — dread with a gain knob.
+   */
+  startMusic() {
+    this.musicGain = this.ctx.createGain()
+    this.musicGain.gain.value = 0
+    const filter = this.ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = 220
+    filter.connect(this.musicGain)
+    this.musicGain.connect(this.master)
+    for (const [freq, type] of [
+      [55, 'triangle'],
+      [55.6, 'triangle'],
+      [82.4, 'sine'],
+    ]) {
+      const osc = this.ctx.createOscillator()
+      osc.type = type
+      osc.frequency.value = freq
+      osc.connect(filter)
+      osc.start()
+    }
+    const lfo = this.ctx.createOscillator()
+    lfo.frequency.value = 0.05
+    const lfoGain = this.ctx.createGain()
+    lfoGain.gain.value = 60
+    lfo.connect(lfoGain).connect(filter.frequency)
+    lfo.start()
   }
 
   startWind() {

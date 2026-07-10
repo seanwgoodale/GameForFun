@@ -9,6 +9,9 @@ import { EncounterPanel } from '../game/EncounterPanel.jsx'
 import { MinimapOverlay } from '../game/MinimapOverlay.jsx'
 import { TouchControls } from '../game/TouchControls.jsx'
 
+/** One-shot tutorial hints, remembered for the whole browser session. */
+const seenHints = new Set()
+
 /** Touch UI when the primary pointer is coarse or the device has touch;
  * `?touch` forces it on for desktop debugging. */
 const isTouchDevice = () => {
@@ -110,8 +113,67 @@ export function GameScreen({ onTimeUp, game }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [playing, encounterId, fireRangedWeapon, consumeHealthPack])
 
+  // ── Onboarding hints: contextual, once per session ──
+  const [hint, setHint] = useState(null)
+  const hintTimeoutRef = useRef(0)
+  const showHint = useCallback((id, text) => {
+    if (seenHints.has(id)) return
+    seenHints.add(id)
+    setHint(text)
+    window.clearTimeout(hintTimeoutRef.current)
+    hintTimeoutRef.current = window.setTimeout(() => setHint(null), 4500)
+  }, [])
+  useEffect(() => () => window.clearTimeout(hintTimeoutRef.current), [])
+
+  useEffect(() => {
+    if (!playing) return
+    const id = window.setTimeout(
+      () =>
+        showHint(
+          'move',
+          touchUI ? 'Drag the stick to move out' : 'Hold WASD or arrows to move out',
+        ),
+      1200,
+    )
+    return () => window.clearTimeout(id)
+  }, [playing, touchUI, showHint])
+
+  const hostileNearby = useMemo(() => {
+    const p = game.player
+    return game.entities.some(
+      (e) =>
+        !e.defeated &&
+        e.kind === 'zombie' &&
+        Math.hypot(e.x - p.x, e.y - p.y) < 7,
+    )
+  }, [game.entities, game.player])
+  useEffect(() => {
+    if (playing && hostileNearby)
+      showHint(
+        'fire',
+        touchUI
+          ? 'Hostile close — FIRE shoots your facing direction'
+          : 'Hostile close — SPACE fires in your facing direction',
+      )
+  }, [playing, hostileNearby, touchUI, showHint])
+
+  useEffect(() => {
+    if (playing && game.healthPacks > 0)
+      showHint(
+        'med',
+        touchUI ? 'Medkit banked — tap MED to heal' : 'Medkit banked — press H to heal',
+      )
+  }, [playing, game.healthPacks, touchUI, showHint])
+
+  // ── Extraction countdown drama ──
+  useEffect(() => {
+    if (!playing || remaining > 30 || remaining <= 0) return
+    audio.countdownTick(remaining <= 10)
+  }, [playing, remaining])
+
   const healthFrac = Math.max(0, Math.min(1, game.health / MAX_HEALTH))
   const lowTime = remaining <= 60
+  const finalCountdown = remaining <= 30 && remaining > 0 && playing
   const quotaMet = game.zombiesKilled >= game.zombiesToEliminate
 
   const hudChip =
@@ -133,6 +195,22 @@ export function GameScreen({ onTimeUp, game }) {
   return (
     <div className="relative h-dvh w-full select-none overflow-hidden bg-[#0c0a08] text-amber-50">
       <CanvasMap />
+
+      {finalCountdown ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 animate-pulse motion-reduce:animate-none"
+          style={{ boxShadow: 'inset 0 0 60px 12px rgba(180,30,30,0.35)' }}
+          aria-hidden
+        />
+      ) : null}
+
+      {hint ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-4">
+          <p className="animate-fade-in rounded-md border border-amber-200/25 bg-black/70 px-3.5 py-2 text-center text-xs font-semibold tracking-wide text-amber-100 backdrop-blur-[3px]">
+            {hint}
+          </p>
+        </div>
+      ) : null}
 
       {/* ── Top HUD ─────────────────────────────────────────────── */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">

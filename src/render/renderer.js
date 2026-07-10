@@ -68,6 +68,10 @@ export class GameRenderer {
     this.bakedWorld = null
     /** Fog painted at 1px/tile then upscaled with smoothing for soft edges. */
     this.fogCanvas = document.createElement('canvas')
+    /** Sprite-sized scratch canvas for tint compositing. */
+    this.scratch = document.createElement('canvas')
+    this.scratch.width = SPRITE_PX
+    this.scratch.height = SPRITE_PX
     /** entity id -> interpolated render position */
     this.entityPos = new Map()
     /** player facing/animation state */
@@ -170,6 +174,7 @@ export class GameRenderer {
     this.fogCanvas.height = world.rows
     this.bakedWorld = world
     this.entityPos.clear()
+    this.fx = createEffects() // decals/particles never survive a run change
     this.cam.initialized = false
   }
 
@@ -241,6 +246,26 @@ export class GameRenderer {
       world.revealed.has(cellKey(Math.floor(wx), Math.floor(wy)))
     const inView = (wx, wy, pad = 2) =>
       wx > camX - pad && wx < camX + view.w + pad && wy > camY - pad && wy < camY + view.h + pad
+
+    // Corpse decals — on the ground, under everything that walks.
+    for (const d of this.fx.decals) {
+      if (!inView(d.x, d.y)) continue
+      const s = toScreen(d.x, d.y)
+      const fade = d.age > d.ttl - 10 ? (d.ttl - d.age) / 10 : 1
+      ctx.globalAlpha = 0.5 * fade
+      ctx.fillStyle = '#241612'
+      ctx.beginPath()
+      ctx.ellipse(s.x, s.y, px * 0.34, px * 0.16, (d.seed % 7) / 7, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.globalAlpha = 0.75 * fade
+      ctx.fillStyle = '#b9b3a4'
+      for (let i = 0; i < 3; i++) {
+        const bx = s.x + (((d.seed >> (i * 3)) % 9) - 4) * px * 0.05
+        const by = s.y + (((d.seed >> (i * 4)) % 5) - 2) * px * 0.04
+        ctx.fillRect(bx, by, px * 0.08, px * 0.035)
+      }
+      ctx.globalAlpha = 1
+    }
 
     // Radiation zones (under sprites).
     for (const e of world.entities) {
@@ -427,6 +452,18 @@ export class GameRenderer {
         else sprite = frame ? this.atlas.playerSf : this.atlas.playerS
         this.drawShadow(s.x, s.y, px)
         ctx.drawImage(sprite, s.x - px / 2, s.y - px * 0.82, px, px)
+        if (performance.now() < this.fx.playerHitUntil) {
+          // Hit tint: rebuild the sprite red-washed on the scratch canvas so
+          // only sprite pixels (not the bounding box) get tinted.
+          const sctx = this.scratch.getContext('2d')
+          sctx.clearRect(0, 0, SPRITE_PX, SPRITE_PX)
+          sctx.drawImage(sprite, 0, 0)
+          sctx.globalCompositeOperation = 'source-atop'
+          sctx.fillStyle = 'rgba(232,86,74,0.55)'
+          sctx.fillRect(0, 0, SPRITE_PX, SPRITE_PX)
+          sctx.globalCompositeOperation = 'source-over'
+          ctx.drawImage(this.scratch, s.x - px / 2, s.y - px * 0.82, px, px)
+        }
       },
     })
 
